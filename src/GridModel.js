@@ -1,0 +1,1 @@
+export const CellType = Object.freeze({void:0, pin:1, wall:2})
