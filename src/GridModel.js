@@ -6,8 +6,8 @@ export function parseGridString(input) {
   // console.log(n_col, n_row);
   const grid = Array(nRow).fill(null)
     .map( 
-    a => Array(nCol).fill(null)
-      .map( a => ({type: CellType.void}) )
+      (a, x) => Array(nCol).fill(null)
+      .map( (a, y) => ({x, y, type: CellType.void}) )
     )
 
   let i_line = 1

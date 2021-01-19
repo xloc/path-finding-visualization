@@ -12,7 +12,6 @@ function App() {
     const gridModel = new GridModel(parseGridString(data))
     setGrid(gridModel.grid)
 
-
     setLoading(false)
   }, [])
 
