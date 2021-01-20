@@ -1,7 +1,7 @@
 import React from 'react'
-import Cell from './Cell'
+import Cell from './MapCell'
 
-export default function Grid({grid}) {
+export default function MapGrid({grid}) {
   return (
   <div>
     {grid.map( (row, i) => {

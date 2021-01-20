@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { CellType } from "./GridModel";
+import { CellType } from "./MapGridModel";
 
 const netColors = [
   '#ff6347',

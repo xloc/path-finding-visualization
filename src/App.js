@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import data from './data';
-import Grid from './Grid';
+import MapGrid from './MapGrid';
 
-import GridModel, { parseGridString } from "./GridModel";
+import GridModel, { parseGridString } from "./MapGridModel";
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -21,7 +21,7 @@ function App() {
 
   return (
     <div style={{ display:'flex', justifyContent:'center', marginTop:100 }}>
-      <Grid grid={ grid } />
+      <MapGrid grid={ grid } />
     </div>
   );
 }
