@@ -1,4 +1,4 @@
-export const CellType = Object.freeze({void:0, pin:1, wall:2})
+export const MapCellType = Object.freeze({void:0, pin:1, wall:2})
 
 export function parseGridString(input) {
   const lines = input.split('\n')
@@ -6,7 +6,7 @@ export function parseGridString(input) {
   const grid = Array(nRow).fill(null)
     .map( 
       (a, x) => Array(nCol).fill(null)
-      .map( (a, y) => ({x, y, type: CellType.void}) )
+      .map( (a, y) => ({x, y, type: MapCellType.void}) )
     )
 
   let i_line = 1
@@ -14,7 +14,7 @@ export function parseGridString(input) {
   const n_wall = parseInt(lines[i_line++])
   lines.slice(i_line, i_line + n_wall).forEach(line => {
     const [j, i]  = line.split(' ').map( a => parseInt(a) )
-    grid[i][j].type = CellType.wall;
+    grid[i][j].type = MapCellType.wall;
   });
   i_line += n_wall;
   
@@ -27,7 +27,7 @@ export function parseGridString(input) {
     const net = [];
     for (let idx = 0; idx < coors.length; idx += 2) {
       const j = coors[idx], i = coors[idx + 1];
-      grid[i][j].type = CellType.pin;
+      grid[i][j].type = MapCellType.pin;
       grid[i][j].net = netID;
       net.push(grid[i][j]);
     }

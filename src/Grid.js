@@ -1,7 +1,7 @@
 import React from 'react'
-import Cell from './MapCell'
+import MapCell from './MapCell'
 
-export default function MapGrid({grid}) {
+export default function Grid({grid}) {
   return (
   <div>
     {grid.map( (row, i) => {
@@ -10,7 +10,7 @@ export default function MapGrid({grid}) {
         key={i} 
         style={{display:'flex', flexDirection:"row", flexWrap:'nowrap'}}
       >
-        { row.map( (cell, j) => <Cell key={[i, j]} attr={cell} /> ) } 
+        { row.map( (cell, j) => <MapCell key={[i, j]} attr={cell} /> ) } 
       </div>
       )
     })}

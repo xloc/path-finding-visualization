@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { CellType } from "./MapGridModel";
+import { MapCellType } from "./GridModel";
 
 const netColors = [
   '#ff6347',
@@ -13,11 +13,11 @@ const netColors = [
   '#00ff7f',
 ]
 
-export default function Cell({attr}) {
+export default function MapCell({attr}) {
   let color
   switch (attr.type) {
-    case CellType.wall: color = 'black'; break;
-    case CellType.pin: color = netColors[attr.net]; break;
+    case MapCellType.wall: color = 'black'; break;
+    case MapCellType.pin: color = netColors[attr.net]; break;
     default: color = '#ddd'; break;
   }
   
