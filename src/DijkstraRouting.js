@@ -38,7 +38,7 @@ function expand(isBlocked, isConnected, states) {
   if (states.finished) return states;
   const { processingGrid, expansionList, iExpand } = states
 
-  const nextExpansionList = [];
+  const nextExpansionList = new Set();
   expansionList.forEach(([i, j]) => {
     processingGrid[i][j] = iExpand;
     const connected = isConnected(i, j);
@@ -57,14 +57,14 @@ function expand(isBlocked, isConnected, states) {
       if (!isBlocked(i, j) && processingGrid[i][j] === 0) {
         // console.log({i, j, blocked: isBlocked(i, j), pg: processingGrid[i][j] === 0});
 
-        nextExpansionList.push([i, j]);
+        nextExpansionList.add(JSON.stringify([i, j]));
       }
     })
   });
 
   return {
     processingGrid,
-    expansionList: nextExpansionList,
+    expansionList: [...nextExpansionList].map(JSON.parse),
     iExpand: iExpand + 1
   }
 }
