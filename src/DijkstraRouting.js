@@ -3,19 +3,19 @@ import { MapCellType } from "./GridModel";
 export default class DijkstraRouting {
   constructor(gridModel, sources, targets) {
     const { nRow, nCol } = gridModel;
+
+    targets = new Set(targets.map(({x, y}) => JSON.stringify([x, y])));
+
     this.isBlocked = (i, j) => {
       if (i < 0 || i >= nRow || j < 0 || j >= nCol) return true;
+      if (targets.has(JSON.stringify([i, j]))) return false;
       if (gridModel.mapGrid[i][j].type === MapCellType.void) return false;
       else return true;
     }
 
-    targets = targets.map(({x, y}) => [x, y])
     this.isConnected = (i, j) => {
-      for (const [ti, tj] of targets) {
-        console.log({ti, tj, i, j, res: i === ti && j === tj});
-        if (i === ti && j === tj) return true;
-      }
-      return false;
+      console.log({i, j});
+      return (targets.has(JSON.stringify([i, j])));
     }
 
     const processingGrid = Array(nRow).fill(null)
@@ -42,19 +42,19 @@ function expand(isBlocked, isConnected, states) {
   for (const [ci, cj] of expansionList) {
     processingGrid[ci][cj] = iExpand;
 
+    if (isConnected(ci, cj)) {
+      return {
+        finished: true,
+        connectedCoor: [ci, cj],
+        expansionList: [],
+        processingGrid: processingGrid, 
+        iExpand
+      }
+    }
+
     for (const [i, j] of [[ci + 1, cj], [ci - 1, cj], [ci, cj + 1], [ci, cj - 1]]) {
       // console.log({i, j, blocked: isBlocked(i, j), pg: processingGrid[i][j] === 0});
       // console.log({i, j});
-
-      if (isConnected(i, j)) {
-        return {
-          finished: true,
-          connectedCoor: [i, j],
-          expansionList: [],
-          processingGrid: processingGrid, 
-          iExpand
-        }
-      }
 
       if (!isBlocked(i, j) && processingGrid[i][j] === 0) {
         // console.log({i, j, blocked: isBlocked(i, j), pg: processingGrid[i][j] === 0});
