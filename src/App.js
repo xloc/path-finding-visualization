@@ -28,7 +28,8 @@ function App() {
       gridModel.nets[0].slice(1),
     );
 
-    setProcessingGrid(router.current.processingGrid);
+    console.log(router.current.states.processingGrid);
+    setProcessingGrid(router.current.states.processingGrid);
   }, [gridModel])
 
   if (loading) {
@@ -39,7 +40,7 @@ function App() {
     if (!router) return;
 
     console.log(router.current.next());
-    setProcessingGrid(router.current.processingGrid);
+    setProcessingGrid(router.current.states.processingGrid.slice());
   }
 
   return (

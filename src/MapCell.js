@@ -17,7 +17,7 @@ const netColors = [
 export default function MapCell({ mapAttr, processingAttr }) {
   let color;
   switch (mapAttr.type) {
-    case MapCellType.wall: color = 'black'; break;
+    case MapCellType.wall: color = 'darkgrey'; break;
     case MapCellType.pin: color = netColors[mapAttr.net]; break;
     default: color = '#ddd'; break;
   }

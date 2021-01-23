@@ -19,9 +19,8 @@ export default class DijkstraRouting {
     }
 
     const processingGrid = Array(nRow).fill(null)
-      .map(
-        (a, x) => Array(nCol).fill(null)
-          .map((a, y) => 0)
+      .map((a, x) => Array(nCol).fill(null)
+        .map((a, y) => 0)
       );
 
     const expansionList = sources.map(({x, y}) => [x, y])
