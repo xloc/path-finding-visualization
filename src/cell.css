@@ -1,0 +1,9 @@
+.cell {
+    width: 20px;
+    height: 20px;
+    margin: 2px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: small;
+    text-align: center;
+}

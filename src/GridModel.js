@@ -40,7 +40,7 @@ export function parseGridString(input) {
 export default class GridModel {
   constructor({nets, grid, nCol, nRow}) {
     this.nets = nets;
-    this.grid = grid;
+    this.mapGrid = grid;
     this.nCol = nCol;
     this.nRow = nRow;
   }

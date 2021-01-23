@@ -1,5 +1,6 @@
 import React from 'react'
 
+import './cell.css'
 import { MapCellType } from "./GridModel";
 
 const netColors = [
@@ -13,17 +14,17 @@ const netColors = [
   '#00ff7f',
 ]
 
-export default function MapCell({attr}) {
-  let color
-  switch (attr.type) {
+export default function MapCell({ mapAttr, processingAttr }) {
+  let color;
+  switch (mapAttr.type) {
     case MapCellType.wall: color = 'black'; break;
-    case MapCellType.pin: color = netColors[attr.net]; break;
+    case MapCellType.pin: color = netColors[mapAttr.net]; break;
     default: color = '#ddd'; break;
   }
-  
-  const dimension = 20
+
   return (
-    <div style={{ width:dimension, height:dimension, backgroundColor:color, margin:2 }}>
+    <div className="cell" style={{ backgroundColor: color }}>
+      {processingAttr}
     </div>
   )
 }
