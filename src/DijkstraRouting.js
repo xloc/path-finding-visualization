@@ -12,7 +12,7 @@ export default class DijkstraRouting {
     targets = targets.map(({x, y}) => [x, y])
     this.isConnected = (i, j) => {
       for (const [ti, tj] of targets) {
-        console.log({ti, tj, i, j});
+        console.log({ti, tj, i, j, res: i === ti && j === tj});
         if (i === ti && j === tj) return true;
       }
       return false;
@@ -39,28 +39,33 @@ function expand(isBlocked, isConnected, states) {
   const { processingGrid, expansionList, iExpand } = states
 
   const nextExpansionList = new Set();
-  expansionList.forEach(([i, j]) => {
-    processingGrid[i][j] = iExpand;
-    const connected = isConnected(i, j);
-    if (connected) {
-      return {
-        finished: true,
-        connectedCoor: connected,
-        expansionList: [],
-        searchHistory: processingGrid, iExpand
-      }
-    }
+  for (const [ci, cj] of expansionList) {
+    processingGrid[ci][cj] = iExpand;
 
-    [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]].forEach(([i, j]) => {
+    for (const [i, j] of [[ci + 1, cj], [ci - 1, cj], [ci, cj + 1], [ci, cj - 1]]) {
       // console.log({i, j, blocked: isBlocked(i, j), pg: processingGrid[i][j] === 0});
       // console.log({i, j});
+
+      if (isConnected(i, j)) {
+        return {
+          finished: true,
+          connectedCoor: [i, j],
+          expansionList: [],
+          processingGrid: processingGrid, 
+          iExpand
+        }
+      }
+
       if (!isBlocked(i, j) && processingGrid[i][j] === 0) {
         // console.log({i, j, blocked: isBlocked(i, j), pg: processingGrid[i][j] === 0});
+        const jsonCoors = JSON.stringify([i, j])
+        if (!nextExpansionList.has(jsonCoors)) {
+          nextExpansionList.add(jsonCoors);
 
-        nextExpansionList.add(JSON.stringify([i, j]));
+        }
       }
-    })
-  });
+    }
+  }
 
   return {
     processingGrid,
