@@ -1,7 +1,7 @@
 import React from 'react'
 import MapCell from './MapCell'
 
-export default function Grid({gridModel, processingGrid}) {
+export default function Grid({gridModel, routingMarkGrid}) {
   return (
     <div>
       {
@@ -12,7 +12,7 @@ export default function Grid({gridModel, processingGrid}) {
                 <MapCell 
                   key={`mc ${i} ${j}`} 
                   mapAttr={gridModel.mapGrid[i][j]}
-                  processingAttr={processingGrid && processingGrid[i][j]}
+                  routingMark={routingMarkGrid && routingMarkGrid[i][j]}
                 />
               ) )
             } 

@@ -8,13 +8,13 @@ import GridModel, { parseGridString } from "./GridModel";
 function App() {
   const [loading, setLoading] = useState(true)
   const [gridModel, setGridModel] = useState()
-  const [processingGrid, setProcessingGrid] = useState()
+  const [routingMarkGrid, setRoutingMarkGrid] = useState()
 
   useEffect(() => {
     const model = new GridModel(parseGridString(data))
     setGridModel(model)
 
-    setLoading(false)
+    setLoading(false);
   }, [])
 
 
@@ -27,9 +27,8 @@ function App() {
       gridModel.nets[0].slice(0, 1),
       gridModel.nets[0].slice(1),
     );
-
-    console.log(router.current.states.processingGrid);
-    setProcessingGrid(router.current.states.processingGrid);
+    console.log(router.current);
+    setRoutingMarkGrid(router.current.getMarkGrid());
   }, [gridModel])
 
   if (loading) {
@@ -38,16 +37,21 @@ function App() {
 
   function nextExpansion() {
     if (!router) return;
-
-    console.log(router.current.next());
-    setProcessingGrid(router.current.states.processingGrid.slice());
+    router.current.next();
+    setRoutingMarkGrid(router.current.getMarkGrid());
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-      <Grid gridModel={gridModel} processingGrid={processingGrid} />
-      <button onClick={nextExpansion}>Next Expansion</button>
-    </div>
+    <>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+        <Grid gridModel={gridModel} routingMarkGrid={routingMarkGrid} />
+        <button onClick={nextExpansion}>Next Expansion</button>
+      </div>
+      <pre>
+        { router.current && router.current.states && 
+          JSON.stringify(router.current.states.track) }
+      </pre>
+    </>
   );
 }
 

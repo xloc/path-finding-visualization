@@ -14,7 +14,7 @@ const netColors = [
   '#00ff7f',
 ]
 
-export default function MapCell({ mapAttr, processingAttr }) {
+export default function MapCell({ mapAttr, routingMark }) {
   let color;
   switch (mapAttr.type) {
     case MapCellType.wall: color = 'black'; break;
@@ -24,7 +24,8 @@ export default function MapCell({ mapAttr, processingAttr }) {
 
   return (
     <div className="cell" style={{ backgroundColor: color }}>
-      {processingAttr}
+      {/* {routingMark && (routingMark.active ? "o" : (routingMark.visited ? "x" : ""))} */}
+      {routingMark && (routingMark.value)}
     </div>
   )
 }
