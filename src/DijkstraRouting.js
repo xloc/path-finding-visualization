@@ -1,9 +1,9 @@
 import { MapCellType } from "./GridModel";
 
 export default class DijkstraRouting {
-  constructor(gridModel, sources, targets) {
+  constructor(gridModel, sources, targets, netID) {
     const { nRow, nCol } = gridModel;
-    this.netID = sources[0].net;
+    this.netID = netID;
 
     const targetsSet = new Set(targets.map(({ x, y }) => JSON.stringify([x, y])));
 
@@ -76,15 +76,15 @@ export default class DijkstraRouting {
   }
 }
 
-function backTrace(isInBound, isSources, { track, connectedCoor, processingGrid, iExpand, ...rest }) {
+function backTrace(isInBound, isSources, { track, connectedCoor, backTraceCoor, processingGrid, iExpand, ...rest }) {
   iExpand--;
   const newTrack = track || [];
-  const [ci, cj] = connectedCoor;
+  const [ci, cj] = backTraceCoor ?? connectedCoor;
 
   for (const [i, j] of [[ci + 1, cj], [ci - 1, cj], [ci, cj + 1], [ci, cj - 1]]) {
     if (isInBound(i, j) && processingGrid[i][j] === iExpand) {
-      if (isSources(i, j)) return { ...rest, track, processingGrid, trackFound: true };
-      return { ...rest, connectedCoor: [i, j], processingGrid, iExpand, track: [[i, j], ...newTrack] };
+      if (isSources(i, j)) return { ...rest, track, connectedCoor, processingGrid, trackFound: true };
+      return { ...rest, backTraceCoor: [i, j], connectedCoor, processingGrid, iExpand, track: [[i, j], ...newTrack] };
     }
   }
 }
@@ -93,7 +93,7 @@ function expand(isBlocked, isConnected, states) {
   if (states.expansionFinished) return states;
 
   const { processingGrid, expansionList, iExpand } = states;
-  console.log({ processingGrid, expansionList });
+  // console.log({ processingGrid, expansionList });
   if (expansionList.size === 0) {
     return {
       expansionFinished: true,

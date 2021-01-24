@@ -4,6 +4,7 @@ import DijkstraRouting from './DijkstraRouting';
 import Grid from './Grid';
 
 import GridModel, { parseGridString } from "./GridModel";
+import { routeNet } from './RerouteStrategy';
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -24,8 +25,8 @@ function App() {
 
     router.current = new DijkstraRouting(
       gridModel,
-      gridModel.nets[0].slice(0, 1),
-      gridModel.nets[0].slice(1),
+      gridModel.nets[1].slice(0, 1),
+      gridModel.nets[1].slice(1),
     );
     console.log(router.current);
     setRoutingMarkGrid(router.current.getMarkGrid());
@@ -36,13 +37,18 @@ function App() {
   }
 
   function nextExpansion() {
-    if (!router) return;
-    
-    console.time('route');
-    while(router.current.next());
-    console.timeEnd('route');
+    console.log(gridModel.nets[1]);
+    const netID = 1;
+    routeNet(gridModel, netID);
 
-    setRoutingMarkGrid(router.current.getMarkGrid());
+
+    // if (!router) return;
+    
+    // console.time('route');
+    // while(router.current.next());
+    // console.timeEnd('route');
+
+    // setRoutingMarkGrid(router.current.getMarkGrid());
   }
 
   return (
@@ -52,8 +58,8 @@ function App() {
         <button onClick={nextExpansion}>Next Expansion</button>
       </div>
       <pre>
-        { router.current?.states && 
-          JSON.stringify(router.current.states.track) }
+        {router.current?.states &&
+          JSON.stringify(router.current.states.track)}
       </pre>
     </>
   );
