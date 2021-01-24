@@ -21,11 +21,15 @@ export default function MapCell({ mapAttr, routingMark }) {
     case MapCellType.pin: color = netColors[mapAttr.net]; break;
     default: color = '#ddd'; break;
   }
+  
+  if (routingMark && routingMark.trace) {
+    color = netColors[routingMark.net];
+  }
 
   return (
     <div className="cell" style={{ backgroundColor: color }}>
-      {/* {routingMark && (routingMark.active ? "o" : (routingMark.visited ? "x" : ""))} */}
-      {routingMark && (routingMark.value)}
+      {routingMark && (routingMark.active ? "o" : (routingMark.visited ? "x" : ""))}
+      {/* {routingMark && (routingMark.value)} */}
     </div>
   )
 }

@@ -37,7 +37,11 @@ function App() {
 
   function nextExpansion() {
     if (!router) return;
-    router.current.next();
+    
+    console.time('route');
+    while(router.current.next());
+    console.timeEnd('route');
+
     setRoutingMarkGrid(router.current.getMarkGrid());
   }
 
@@ -48,7 +52,7 @@ function App() {
         <button onClick={nextExpansion}>Next Expansion</button>
       </div>
       <pre>
-        { router.current && router.current.states && 
+        { router.current?.states && 
           JSON.stringify(router.current.states.track) }
       </pre>
     </>
