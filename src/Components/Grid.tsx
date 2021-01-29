@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { RouteResult, RouteResultCell } from "../App";
 import { RouteMap } from "../Models/RouteMap";
+import { route } from "../Routers/Router";
 import "./Grid.css";
 
 export class RouteMapCellAttr {
@@ -33,8 +35,8 @@ function makeRouteMapGrid(routeMap: RouteMap): Array<Array<RouteMapCellAttr>> {
   return grid;
 }
 
-type GridProps = { routeMap: RouteMap };
-export default function Grid({ routeMap }: GridProps) {
+type GridProps = { routeMap: RouteMap; routeResult: RouteResult | undefined };
+export default function Grid({ routeMap, routeResult }: GridProps) {
   const [routeMapGrid, setRouteMapGrid] = useState(() =>
     makeRouteMapGrid(routeMap)
   );
@@ -48,7 +50,13 @@ export default function Grid({ routeMap }: GridProps) {
         return (
           <div key={`grid-row ${i}`} className="grid-row">
             {row.map((cell, j) => {
-              return <GridCell key={`grid-cell ${i} ${j}`} mapCell={cell} />;
+              return (
+                <GridCell
+                  key={`grid-cell ${i} ${j}`}
+                  mapCell={cell}
+                  routeResultCell={routeResult?.grid[i][j]}
+                />
+              );
             })}
           </div>
         );
@@ -68,13 +76,22 @@ const netColors = [
   "#00ff7f",
 ];
 
-type GridCellProps = { mapCell: RouteMapCellAttr };
-export function GridCell({ mapCell }: GridCellProps) {
+type GridCellProps = {
+  mapCell: RouteMapCellAttr;
+  routeResultCell: RouteResultCell | undefined;
+};
+export function GridCell({ mapCell, routeResultCell }: GridCellProps) {
   let color = "#ccc";
   if (mapCell.isWall) {
     color = "black";
   } else if (mapCell.isPin) {
     color = netColors[mapCell.netID];
+  }
+
+  if (routeResultCell) {
+    if (routeResultCell.netId !== -1) {
+      color = netColors[routeResultCell.netId];
+    }
   }
   return <div className="grid-cell" style={{ backgroundColor: color }}></div>;
 }
