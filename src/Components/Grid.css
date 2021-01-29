@@ -1,0 +1,14 @@
+.grid-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.grid-cell {
+  width: 20px;
+  height: 20px;
+  margin: 2px;
+
+  font-size: small;
+  text-align: center;
+}
