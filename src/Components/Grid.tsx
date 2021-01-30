@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { RouteResult, RouteResultCell } from "../App";
 import { RouteMap } from "../Models/RouteMap";
-import { route } from "../Routers/Router";
 import "./Grid.css";
 
 export class RouteMapCellAttr {
@@ -35,7 +34,10 @@ function makeRouteMapGrid(routeMap: RouteMap): Array<Array<RouteMapCellAttr>> {
   return grid;
 }
 
-type GridProps = { routeMap: RouteMap; routeResult: RouteResult | undefined };
+type GridProps = {
+  routeMap: RouteMap;
+  routeResult: RouteResult | undefined;
+};
 export default function Grid({ routeMap, routeResult }: GridProps) {
   const [routeMapGrid, setRouteMapGrid] = useState(() =>
     makeRouteMapGrid(routeMap)

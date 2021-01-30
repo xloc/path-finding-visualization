@@ -43,11 +43,11 @@ export function routeConnection(
   while (expansionList.length > 0) {
     const newExpansionList = [] as Array<Coors>;
 
-    expansionList.forEach(([i, j]) => {
+    for (const [i, j] of expansionList) {
       progressGrid.grid[i][j] = iExpand;
-    });
-    expansionList.forEach(([i, j]) => {
-      adjacentCoors(i, j).forEach(([ni, nj]) => {
+    }
+    for (const [i, j] of expansionList) {
+      for (const [ni, nj] of adjacentCoors(i, j)) {
         if (canExpand(ni, nj)) {
           newExpansionList.push([ni, nj]);
           progressGrid.grid[ni][nj] = -2;
@@ -56,8 +56,8 @@ export function routeConnection(
             connectedTargetCoors = [ni, nj];
           }
         }
-      });
-    });
+      }
+    }
     /// whether found target
     if (connectedTargetCoors) {
       expansionList = [];
@@ -76,7 +76,6 @@ export function routeConnection(
   let [i, j]: Coors = connectedTargetCoors;
   let iPrevLayer = nExpand;
   const segments: Array<Coors> = [];
-  const condition = progressGrid.grid[i][j] !== 0;
   while (true) {
     [i, j] = adjacentCoors(i, j).filter(([ni, nj]) => {
       return inRange(ni, nj) && progressGrid.grid[ni][nj] === iPrevLayer;
