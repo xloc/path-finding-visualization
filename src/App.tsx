@@ -7,7 +7,10 @@ import {
   makeObstacleGrid,
   routeNet,
   NetRoutingSuccess,
+  route,
+  MapRouteSuccess,
 } from "./Routers/Router";
+
 import { Grid as GridModel } from "./Models/Grid";
 
 export interface RouteResultCell {
@@ -27,18 +30,20 @@ function App() {
 
   useEffect(() => {
     if (!routeMap) return;
-    const routeResult = routeNet(
-      makeObstacleGrid(routeMap, 1, []),
-      routeMap.nets[1]
-    );
+
+    const routeResult = route(routeMap);
 
     if (!routeResult.succeed) return;
-    const succeed = routeResult as NetRoutingSuccess;
+    const succeed = routeResult as MapRouteSuccess;
+    console.log(succeed);
+
     const grid = new GridModel<RouteResultCell>(routeMap.size, (i, j) => ({
       netId: -1,
     }));
-    succeed.connection.segments.forEach(([i, j]) => {
-      grid.grid[i][j].netId = succeed.connection.netID;
+    succeed.connections.forEach((conn) => {
+      conn.segments.forEach(([i, j]) => {
+        grid.grid[i][j].netId = conn.netID;
+      });
     });
     setRouteResult(grid);
   }, [routeMap]);

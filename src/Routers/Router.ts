@@ -44,8 +44,10 @@ export function routeConnection(
     const newExpansionList = [] as Array<Coors>;
 
     expansionList.forEach(([i, j]) => {
+      progressGrid.grid[i][j] = iExpand;
+    });
+    expansionList.forEach(([i, j]) => {
       adjacentCoors(i, j).forEach(([ni, nj]) => {
-        progressGrid.grid[i][j] = iExpand;
         if (canExpand(ni, nj)) {
           newExpansionList.push([ni, nj]);
           progressGrid.grid[ni][nj] = -2;
@@ -75,18 +77,19 @@ export function routeConnection(
   let iPrevLayer = nExpand;
   const segments: Array<Coors> = [];
   const condition = progressGrid.grid[i][j] !== 0;
-  while (progressGrid.grid[i][j] !== 0) {
+  while (true) {
     [i, j] = adjacentCoors(i, j).filter(([ni, nj]) => {
       return inRange(ni, nj) && progressGrid.grid[ni][nj] === iPrevLayer;
     })[0];
 
+    if (progressGrid.grid[i][j] === 0) break;
     segments.push([i, j]);
     iPrevLayer--;
   }
 
   return {
-    segments,
     succeed: true,
+    segments,
     connectedPin: connectedTargetCoors,
   } as ConnectionRoutingSuccess;
 }
@@ -177,19 +180,55 @@ export function makeObstacleGrid(
   return grid;
 }
 
-export function route(routeMap: RouteMap) {
+export interface MapRouteResult {
+  succeed: boolean;
+}
+
+export interface MapRouteSuccess extends MapRouteResult {
+  netRouteSequence: Array<Net>;
+  connections: Array<Connection>;
+}
+
+export interface RouteQueueItem {
+  priority: number;
+  net: Net;
+}
+export function route(routeMap: RouteMap): MapRouteResult {
   const routedConnections: Array<Connection> = [];
 
-  function tryToRoute(nets: Array<Net>) {
+  function tryToRoute(nets: Array<Net>): MapRouteResult {
+    if (nets.length === 0) {
+      return {
+        succeed: true,
+        netRouteSequence: [],
+        connections: [],
+      } as MapRouteSuccess;
+    }
+
     for (let i = 0; i < nets.length; i++) {
       const net = nets[i];
+
+      /// try to route the net
       const obstacleGrid = makeObstacleGrid(routeMap, i, routedConnections);
-      const result = routeNet(obstacleGrid, net);
-      if (result.succeed) {
-        return;
+      const netResult = routeNet(obstacleGrid, net);
+      if (!netResult.succeed) return { succeed: false };
+      const netSucceed = netResult as NetRoutingSuccess;
+
+      /// if this net can be connected => try route other nets
+      const otherNets = [...nets.slice(0, i), ...nets.slice(i + 1)];
+      const otherNetResult = tryToRoute(otherNets);
+      if (otherNetResult.succeed) {
+        const otherNetSucceed = otherNetResult as MapRouteSuccess;
+        return {
+          succeed: true,
+          netRouteSequence: [net, ...otherNetSucceed.netRouteSequence],
+          connections: [netSucceed.connection, ...otherNetSucceed.connections],
+        } as MapRouteSuccess;
       }
     }
+
+    return { succeed: false };
   }
 
-  tryToRoute(routeMap.nets);
+  return tryToRoute(routeMap.nets);
 }
