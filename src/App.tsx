@@ -29,7 +29,10 @@ function App() {
 
     const routeResult = route(routeMap);
 
-    if (!routeResult.succeed) return;
+    if (!routeResult.succeed) {
+      setRouteResult(undefined);
+      return;
+    }
     const succeed = routeResult as MapRouteSuccess;
     console.log(succeed);
 
@@ -60,7 +63,7 @@ function App() {
     return () => {};
   }, []);
 
-  const [mapName, setMapName] = useState("example.infile");
+  const [mapName, setMapName] = useState("impossible.infile");
   useEffect(() => {
     if (mapName === "") return;
     axios.get<string>(`benchmarks/${mapName}`).then((res) => {
@@ -84,7 +87,7 @@ function App() {
                 {" "}
                 {filename.split(".")[0]}{" "}
               </MenuItem>
-            )) ?? <MenuItem value={""}></MenuItem>}
+            ))}
           </Select>
         </Toolbar>
       </AppBar>

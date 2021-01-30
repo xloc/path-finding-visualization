@@ -77,9 +77,11 @@ export function routeConnection(
   let iPrevLayer = nExpand;
   const segments: Array<Coors> = [];
   while (true) {
+    /* eslint-disable no-loop-func */
     [i, j] = adjacentCoors(i, j).filter(([ni, nj]) => {
       return inRange(ni, nj) && progressGrid.grid[ni][nj] === iPrevLayer;
     })[0];
+    /* eslint-enable no-loop-func */
 
     if (progressGrid.grid[i][j] === 0) break;
     segments.push([i, j]);
@@ -193,9 +195,10 @@ export interface RouteQueueItem {
   net: Net;
 }
 export function route(routeMap: RouteMap): MapRouteResult {
-  const routedConnections: Array<Connection> = [];
-
-  function tryToRoute(nets: Array<Net>): MapRouteResult {
+  function tryToRoute(
+    nets: Array<Net>,
+    routedConnections: Array<Connection>
+  ): MapRouteResult {
     if (nets.length === 0) {
       return {
         succeed: true,
@@ -215,7 +218,10 @@ export function route(routeMap: RouteMap): MapRouteResult {
 
       /// if this net can be connected => try route other nets
       const otherNets = [...nets.slice(0, i), ...nets.slice(i + 1)];
-      const otherNetResult = tryToRoute(otherNets);
+      const otherNetResult = tryToRoute(otherNets, [
+        ...routedConnections,
+        netSucceed.connection,
+      ]);
       if (otherNetResult.succeed) {
         const otherNetSucceed = otherNetResult as MapRouteSuccess;
         return {
@@ -229,5 +235,5 @@ export function route(routeMap: RouteMap): MapRouteResult {
     return { succeed: false };
   }
 
-  return tryToRoute(routeMap.nets);
+  return tryToRoute(routeMap.nets, []);
 }
