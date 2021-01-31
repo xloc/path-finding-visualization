@@ -2,10 +2,20 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   AppBar,
+  Container,
+  createStyles,
+  CssBaseline,
+  Divider,
+  Drawer,
+  List,
+  ListItem,
+  makeStyles,
   MenuItem,
   Select,
+  Theme,
   ThemeProvider,
   Toolbar,
+  Typography,
 } from "@material-ui/core";
 
 import theme from "./theme";
@@ -20,9 +30,38 @@ export interface RouteResultCell {
 }
 export type RouteResult = GridModel<RouteResultCell>;
 
+const drawerWidth = 150;
+
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      display: "flex",
+    },
+    appBar: {
+      width: `calc(100% - ${drawerWidth}px)`,
+      marginLeft: drawerWidth,
+    },
+    drawer: {
+      width: drawerWidth,
+      flexShrink: 0,
+    },
+    drawerPaper: {
+      width: drawerWidth,
+    },
+    // necessary for content to be below app bar
+    toolbar: theme.mixins.toolbar,
+    content: {
+      flexGrow: 1,
+      backgroundColor: theme.palette.background.default,
+      padding: theme.spacing(3),
+    },
+  })
+);
+
 function App() {
   const [routeResult, setRouteResult] = useState<RouteResult>();
   const [routeMap, setRouteMap] = useState<RouteMap>();
+  const classes = useStyles();
 
   useEffect(() => {
     if (!routeMap) return;
@@ -73,34 +112,53 @@ function App() {
     /// TODO clean up
   }, [mapName]);
 
-  return (
-    <ThemeProvider theme={theme}>
-      <AppBar position="static">
-        <Toolbar>
-          <Select
-            style={{ width: "8em", color: "white" }}
-            value={mapName}
-            onChange={(event) => setMapName(event.target.value as string)}
-          >
-            {infiles?.map((filename) => (
-              <MenuItem key={filename} value={filename}>
-                {" "}
-                {filename.split(".")[0]}{" "}
-              </MenuItem>
-            ))}
-          </Select>
-        </Toolbar>
-      </AppBar>
-      <div style={{ margin: 20 }}>
-        {routeMap ? (
-          <Grid routeMap={routeMap} routeResult={routeResult} />
-        ) : (
-          <></>
-        )}
+  const routingMapList = (
+    <List>
+      {infiles?.map((filename) => (
+        <ListItem
+          button
+          key={filename}
+          onClick={() => setMapName(filename)}
+          selected={filename === mapName}
+        >
+          {filename.split(".")[0]}
+        </ListItem>
+      ))}
+    </List>
+  );
 
-        <button onClick={next}> Next </button>
-      </div>
-    </ThemeProvider>
+  return (
+    <div className={classes.root}>
+      <CssBaseline />
+      <ThemeProvider theme={theme}>
+        <AppBar position="fixed" className={classes.appBar}>
+          <Toolbar>
+            {" "}
+            <Typography variant="h6" noWrap>
+              {mapName}
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Drawer
+          open={true}
+          variant="permanent"
+          className={classes.drawer}
+          classes={{
+            paper: classes.drawerPaper,
+          }}
+        >
+          {routingMapList}
+        </Drawer>
+        <main className={classes.content}>
+          <div className={classes.toolbar} />
+          {routeMap ? (
+            <Grid routeMap={routeMap} routeResult={routeResult} />
+          ) : (
+            <></>
+          )}
+        </main>
+      </ThemeProvider>
+    </div>
   );
 }
 
