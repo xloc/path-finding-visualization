@@ -194,7 +194,35 @@ export interface RouteQueueItem {
   priority: number;
   net: Net;
 }
-export function route(routeMap: RouteMap): MapRouteResult {
+
+export interface IntermediateRouteSucceed extends IntermediateRouteResult {
+  connectionHistory: Array<Connection>;
+  newConnection: Connection;
+}
+
+export interface IntermediateRouteFailNet extends IntermediateRouteResult {
+  connectionHistory: Array<Connection>;
+  failedNet: Net;
+}
+
+export interface IntermediateRouteFailAll extends IntermediateRouteResult {
+  connectionHistory: Array<Connection>;
+}
+
+export enum IntermediateRouteResultType {
+  Succeed = 0,
+  FailNet,
+  FailAll,
+}
+
+export interface IntermediateRouteResult {
+  type: IntermediateRouteResultType;
+}
+
+export function route(
+  routeMap: RouteMap,
+  yieldResultCallback: (arg0: IntermediateRouteResult) => void
+): MapRouteResult {
   function tryToRoute(
     nets: Array<Net>,
     routedConnections: Array<Connection>
@@ -213,8 +241,20 @@ export function route(routeMap: RouteMap): MapRouteResult {
       /// try to route the net
       const obstacleGrid = makeObstacleGrid(routeMap, i, routedConnections);
       const netResult = routeNet(obstacleGrid, net);
-      if (!netResult.succeed) return { succeed: false };
+      if (!netResult.succeed) {
+        yieldResultCallback({
+          type: IntermediateRouteResultType.FailNet,
+          connectionHistory: routedConnections,
+          failedNet: net,
+        } as IntermediateRouteFailNet);
+        continue;
+      }
       const netSucceed = netResult as NetRoutingSuccess;
+      yieldResultCallback({
+        type: IntermediateRouteResultType.Succeed,
+        connectionHistory: routedConnections,
+        newConnection: netSucceed.connection,
+      } as IntermediateRouteSucceed);
 
       /// if this net can be connected => try route other nets
       const otherNets = [...nets.slice(0, i), ...nets.slice(i + 1)];
@@ -232,6 +272,10 @@ export function route(routeMap: RouteMap): MapRouteResult {
       }
     }
 
+    yieldResultCallback({
+      type: IntermediateRouteResultType.FailAll,
+      connectionHistory: routedConnections,
+    } as IntermediateRouteFailAll);
     return { succeed: false };
   }
 

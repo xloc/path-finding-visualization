@@ -11,4 +11,12 @@
 
   font-size: small;
   text-align: center;
+  color: #92da26;
+}
+
+.pin {
+  width: 10px;
+  height: 10px;
+  background-color: #fffc;
+  margin: 5px;
 }

@@ -1,0 +1,17 @@
+.history-list {
+  margin-left: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  align-items: center;
+}
+
+.history-cell {
+  width: 10px;
+  height: 10px;
+  margin: 2px;
+
+  font-size: small;
+  text-align: center;
+}

@@ -1,3 +1,8 @@
 * {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.icon-alignment {
+  display: flex;
+  align-items: center;
+}

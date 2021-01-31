@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { RouteResult, RouteResultCell } from "../App";
 import { RouteMap } from "../Models/RouteMap";
 import "./Grid.css";
+import NetColors from "./NetColorTheme";
 
 export class RouteMapCellAttr {
   isWall = false;
@@ -67,17 +68,6 @@ export default function Grid({ routeMap, routeResult }: GridProps) {
   );
 }
 
-const netColors = [
-  "#ff6347",
-  "#adff2f",
-  "#4682b4",
-  "#F4A460",
-  "#dda0dd",
-
-  "#6a5acd",
-  "#00ff7f",
-];
-
 type GridCellProps = {
   mapCell: RouteMapCellAttr;
   routeResultCell: RouteResultCell | undefined;
@@ -87,13 +77,17 @@ export function GridCell({ mapCell, routeResultCell }: GridCellProps) {
   if (mapCell.isWall) {
     color = "black";
   } else if (mapCell.isPin) {
-    color = netColors[mapCell.netID];
+    color = NetColors[mapCell.netID];
   }
 
   if (routeResultCell) {
     if (routeResultCell.netId !== -1) {
-      color = netColors[routeResultCell.netId];
+      color = NetColors[routeResultCell.netId];
     }
   }
-  return <div className="grid-cell" style={{ backgroundColor: color }}></div>;
+  return (
+    <div className="grid-cell" style={{ backgroundColor: color }}>
+      <div className={mapCell.isPin ? "pin" : ""} />
+    </div>
+  );
 }

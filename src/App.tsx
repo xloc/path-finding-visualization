@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   AppBar,
+  Box,
   Container,
   createStyles,
   CssBaseline,
@@ -22,15 +23,51 @@ import theme from "./theme";
 import "./App.css";
 import Grid from "./Components/Grid";
 import { parseRoutingMapString, RouteMap } from "./Models/RouteMap";
-import { route, MapRouteSuccess } from "./Routers/Router";
-import { Grid as GridModel } from "./Models/Grid";
+import {
+  route,
+  MapRouteSuccess,
+  IntermediateRouteResultType,
+  IntermediateRouteResult,
+  IntermediateRouteSucceed,
+  IntermediateRouteFailNet,
+  IntermediateRouteFailAll,
+  Connection,
+} from "./Routers/Router";
+import { Grid as GridModel, GridSize } from "./Models/Grid";
+import {
+  ConnectSucceed,
+  ConnectFailAll,
+  ConnectFailNet,
+} from "./Components/RouteProgressItems";
+
+import {
+  CheckCircle as CheckIcon,
+  ErrorOutline as ErrorOutlineIcon,
+  RemoveCircle as BannedIcon,
+} from "@material-ui/icons";
 
 export interface RouteResultCell {
   netId: number;
 }
 export type RouteResult = GridModel<RouteResultCell>;
 
-const drawerWidth = 150;
+const circuitDrawerWidth = 150;
+const historyDrawerWidth = 150;
+
+function makeRouteResultGridFromConnections(
+  size: GridSize,
+  connections: Array<Connection>
+) {
+  const grid = new GridModel<RouteResultCell>(size, (i, j) => ({
+    netId: -1,
+  }));
+  connections.forEach((conn) => {
+    conn.segments.forEach(([i, j]) => {
+      grid.grid[i][j].netId = conn.netID;
+    });
+  });
+  return grid;
+}
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -38,15 +75,22 @@ const useStyles = makeStyles((theme: Theme) =>
       display: "flex",
     },
     appBar: {
-      width: `calc(100% - ${drawerWidth}px)`,
-      marginLeft: drawerWidth,
+      width: `calc(100% - ${circuitDrawerWidth}px - ${historyDrawerWidth}px)`,
+      left: circuitDrawerWidth,
     },
-    drawer: {
-      width: drawerWidth,
+    circuitDrawer: {
+      width: circuitDrawerWidth,
       flexShrink: 0,
     },
-    drawerPaper: {
-      width: drawerWidth,
+    circuitDrawerPaper: {
+      width: circuitDrawerWidth,
+    },
+    historyDrawer: {
+      width: historyDrawerWidth,
+    },
+    historyDrawerPaper: {
+      width: historyDrawerWidth,
+      flexShrink: 0,
     },
     // necessary for content to be below app bar
     toolbar: theme.mixins.toolbar,
@@ -62,29 +106,6 @@ function App() {
   const [routeResult, setRouteResult] = useState<RouteResult>();
   const [routeMap, setRouteMap] = useState<RouteMap>();
   const classes = useStyles();
-
-  useEffect(() => {
-    if (!routeMap) return;
-
-    const routeResult = route(routeMap);
-
-    if (!routeResult.succeed) {
-      setRouteResult(undefined);
-      return;
-    }
-    const succeed = routeResult as MapRouteSuccess;
-    console.log(succeed);
-
-    const grid = new GridModel<RouteResultCell>(routeMap.size, (i, j) => ({
-      netId: -1,
-    }));
-    succeed.connections.forEach((conn) => {
-      conn.segments.forEach(([i, j]) => {
-        grid.grid[i][j].netId = conn.netID;
-      });
-    });
-    setRouteResult(grid);
-  }, [routeMap]);
 
   function next() {
     // const grid = new GridModel<RouteResultCell>(routeMap.size, (i, j) => ({
@@ -127,6 +148,96 @@ function App() {
     </List>
   );
 
+  const [routeHistory, setRouteHistory] = useState(
+    [] as Array<IntermediateRouteResult>
+  );
+
+  const innerResultCallback = (result: IntermediateRouteResult) => {
+    setRouteHistory((prev) => {
+      if (prev.length > 100) return prev;
+      return [...prev, result];
+    });
+  };
+
+  useEffect(() => {
+    if (!routeMap) return;
+
+    setRouteHistory([]);
+    const routeResult = route(routeMap, innerResultCallback);
+
+    if (!routeResult.succeed) {
+      setRouteResult(undefined);
+      return;
+    }
+    const succeed = routeResult as MapRouteSuccess;
+    console.log(succeed);
+
+    const grid = makeRouteResultGridFromConnections(
+      routeMap.size,
+      succeed.connections
+    );
+    setRouteResult(grid);
+  }, [routeMap]);
+
+  const routingHistory = (
+    <List>
+      {routeHistory.map((result, i) => {
+        switch (result.type) {
+          case IntermediateRouteResultType.Succeed:
+            const succeedResult = result as IntermediateRouteSucceed;
+            return (
+              <ListItem
+                button
+                key={`history ${i}`}
+                onClick={() => {
+                  if (!routeMap) return;
+                  const grid = makeRouteResultGridFromConnections(
+                    routeMap.size,
+                    [
+                      ...succeedResult.connectionHistory,
+                      succeedResult.newConnection,
+                    ]
+                  );
+                  setRouteResult(grid);
+                }}
+              >
+                <Box color="success.main" className="icon-alignment">
+                  <CheckIcon fontSize="small" />
+                </Box>
+                <ConnectSucceed
+                  result={result as IntermediateRouteSucceed}
+                ></ConnectSucceed>
+              </ListItem>
+            );
+          case IntermediateRouteResultType.FailNet:
+            return (
+              <ListItem button key={`history ${i}`}>
+                <Box color="error.main" className="icon-alignment">
+                  <ErrorOutlineIcon fontSize="small" />
+                </Box>
+                <ConnectFailNet
+                  result={result as IntermediateRouteFailNet}
+                ></ConnectFailNet>
+              </ListItem>
+            );
+          case IntermediateRouteResultType.FailAll:
+            return (
+              <ListItem button key={`history ${i}`}>
+                <Box color="error.main" className="icon-alignment">
+                  <BannedIcon fontSize="small" />
+                </Box>
+                <ConnectFailAll
+                  result={result as IntermediateRouteFailAll}
+                ></ConnectFailAll>
+              </ListItem>
+            );
+          default:
+            return "0";
+        }
+      })}
+    </List>
+  );
+
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -142,10 +253,8 @@ function App() {
         <Drawer
           open={true}
           variant="permanent"
-          className={classes.drawer}
-          classes={{
-            paper: classes.drawerPaper,
-          }}
+          className={classes.circuitDrawer}
+          classes={{ paper: classes.circuitDrawerPaper }}
         >
           {routingMapList}
         </Drawer>
@@ -157,6 +266,15 @@ function App() {
             <></>
           )}
         </main>
+        <Drawer
+          open={true}
+          variant="permanent"
+          className={classes.historyDrawer}
+          classes={{ paper: classes.historyDrawerPaper }}
+          anchor="right"
+        >
+          {routingHistory}
+        </Drawer>
       </ThemeProvider>
     </div>
   );
