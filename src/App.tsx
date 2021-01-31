@@ -14,11 +14,6 @@ import {
   Toolbar,
   Typography,
 } from "@material-ui/core";
-import {
-  CheckCircle as CheckIcon,
-  ErrorOutline as ErrorOutlineIcon,
-  RemoveCircle as BannedIcon,
-} from "@material-ui/icons";
 
 /// User Component Imports
 import theme from "./theme";
@@ -211,9 +206,6 @@ function App() {
                 onClick={() => setCurrentHistory(result)}
                 selected={result === currentHistory}
               >
-                <Box color="success.main" className="icon-alignment">
-                  <CheckIcon fontSize="small" />
-                </Box>
                 <ConnectSucceed
                   result={result as IntermediateRouteSucceed}
                 ></ConnectSucceed>
@@ -228,9 +220,6 @@ function App() {
                 onClick={() => setCurrentHistory(result)}
                 selected={result === currentHistory}
               >
-                <Box color="error.main" className="icon-alignment">
-                  <ErrorOutlineIcon fontSize="small" />
-                </Box>
                 <ConnectFailNet
                   result={result as IntermediateRouteFailNet}
                 ></ConnectFailNet>
@@ -239,9 +228,6 @@ function App() {
           case IntermediateRouteResultType.FailAll:
             return (
               <ListItem button key={`history ${i}`}>
-                <Box color="error.main" className="icon-alignment">
-                  <BannedIcon fontSize="small" />
-                </Box>
                 <ConnectFailAll
                   result={result as IntermediateRouteFailAll}
                 ></ConnectFailAll>

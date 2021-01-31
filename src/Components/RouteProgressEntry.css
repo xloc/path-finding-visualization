@@ -15,3 +15,13 @@
   font-size: small;
   text-align: center;
 }
+
+.icon-alignment {
+  display: flex;
+  align-items: center;
+}
+
+.entry-row {
+  display: flex;
+  flex-direction: row;
+}

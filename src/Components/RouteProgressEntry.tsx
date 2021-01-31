@@ -1,4 +1,11 @@
 import {
+  CheckCircle as CheckIcon,
+  ErrorOutline as ErrorOutlineIcon,
+  RemoveCircle as BannedIcon,
+} from "@material-ui/icons";
+import { Box } from "@material-ui/core";
+
+import {
   IntermediateRouteFailAll,
   IntermediateRouteFailNet,
   IntermediateRouteSucceed,
@@ -13,7 +20,10 @@ type ConnectedSucceedProps = {
 export function ConnectSucceed({ result }: ConnectedSucceedProps) {
   const id = uuidv4();
   return (
-    <div>
+    <div className="entry-row">
+      <Box color="success.main" className="icon-alignment">
+        <CheckIcon fontSize="small" />
+      </Box>
       <div className="history-list">
         {result.connectionHistory.map((conn, i) => {
           return (
@@ -39,7 +49,10 @@ type ConnectFailNetProps = {
 export function ConnectFailNet({ result }: ConnectFailNetProps) {
   const id = uuidv4();
   return (
-    <div>
+    <div className="entry-row">
+      <Box color="error.main" className="icon-alignment">
+        <ErrorOutlineIcon fontSize="small" />
+      </Box>
       <div className="history-list">
         {result.connectionHistory.map((conn, i) => {
           return (
@@ -65,7 +78,10 @@ type ConnectFailAllProps = {
 export function ConnectFailAll({ result }: ConnectFailAllProps) {
   const id = uuidv4();
   return (
-    <div>
+    <div className="entry-row">
+      <Box color="error.main" className="icon-alignment">
+        <BannedIcon fontSize="small" />
+      </Box>
       <div className="history-list">
         {result.connectionHistory.map((conn, i) => {
           return (
