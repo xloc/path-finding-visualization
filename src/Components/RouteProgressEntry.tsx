@@ -1,11 +1,10 @@
-import React from "react";
 import {
   IntermediateRouteFailAll,
   IntermediateRouteFailNet,
   IntermediateRouteSucceed,
 } from "../Routers/Router";
 import NetColors from "./NetColorTheme";
-import "./RouteProgressItems.css";
+import "./RouteProgressEntry.css";
 import { v4 as uuidv4 } from "uuid";
 
 type ConnectedSucceedProps = {

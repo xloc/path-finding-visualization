@@ -28,7 +28,7 @@ import {
   ConnectSucceed,
   ConnectFailAll,
   ConnectFailNet,
-} from "./Components/RouteProgressItems";
+} from "./Components/RouteProgressEntry";
 
 /// User Model Imports
 import { Grid as GridModel, GridSize } from "./Models/Grid";
