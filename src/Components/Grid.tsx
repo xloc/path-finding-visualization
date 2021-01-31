@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { RouteResult, RouteResultCell } from "../App";
+import { RouteResult, RouteResultCell } from "../Models/RouteResult";
 import { RouteMap } from "../Models/RouteMap";
 import "./Grid.css";
 import NetColors from "./NetColorTheme";

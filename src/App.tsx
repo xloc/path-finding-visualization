@@ -3,25 +3,35 @@ import axios from "axios";
 import {
   AppBar,
   Box,
-  Container,
   createStyles,
   CssBaseline,
-  Divider,
   Drawer,
   List,
   ListItem,
   makeStyles,
-  MenuItem,
-  Select,
   Theme,
   ThemeProvider,
   Toolbar,
   Typography,
 } from "@material-ui/core";
+import {
+  CheckCircle as CheckIcon,
+  ErrorOutline as ErrorOutlineIcon,
+  RemoveCircle as BannedIcon,
+} from "@material-ui/icons";
 
+/// User Component Imports
 import theme from "./theme";
 import "./App.css";
 import Grid from "./Components/Grid";
+import {
+  ConnectSucceed,
+  ConnectFailAll,
+  ConnectFailNet,
+} from "./Components/RouteProgressItems";
+
+/// User Model Imports
+import { Grid as GridModel, GridSize } from "./Models/Grid";
 import { parseRoutingMapString, RouteMap } from "./Models/RouteMap";
 import {
   route,
@@ -33,26 +43,7 @@ import {
   IntermediateRouteFailAll,
   Connection,
 } from "./Routers/Router";
-import { Grid as GridModel, GridSize } from "./Models/Grid";
-import {
-  ConnectSucceed,
-  ConnectFailAll,
-  ConnectFailNet,
-} from "./Components/RouteProgressItems";
-
-import {
-  CheckCircle as CheckIcon,
-  ErrorOutline as ErrorOutlineIcon,
-  RemoveCircle as BannedIcon,
-} from "@material-ui/icons";
-
-export interface RouteResultCell {
-  netId: number;
-}
-export type RouteResult = GridModel<RouteResultCell>;
-
-const circuitDrawerWidth = 150;
-const historyDrawerWidth = 150;
+import { RouteResult, RouteResultCell } from "./Models/RouteResult";
 
 function makeRouteResultGridFromConnections(
   size: GridSize,
@@ -69,6 +60,8 @@ function makeRouteResultGridFromConnections(
   return grid;
 }
 
+const circuitDrawerWidth = 150;
+const historyDrawerWidth = 150;
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -106,14 +99,6 @@ function App() {
   const [routeResult, setRouteResult] = useState<RouteResult>();
   const [routeMap, setRouteMap] = useState<RouteMap>();
   const classes = useStyles();
-
-  function next() {
-    // const grid = new GridModel<RouteResultCell>(routeMap.size, (i, j) => ({
-    //   netId: -1,
-    // }));
-    // grid.grid[0][0].netId = 0;
-    // setRouteResult(grid);
-  }
 
   const [infiles, setInfiles] = useState<Array<string>>();
   useEffect(() => {
@@ -179,6 +164,40 @@ function App() {
     setRouteResult(grid);
   }, [routeMap]);
 
+  const [
+    currentHistory,
+    setCurrentHistory,
+  ] = useState<IntermediateRouteResult>();
+  useEffect(() => {
+    if (!routeMap) return;
+    if (!currentHistory) return;
+
+    switch (currentHistory.type) {
+      case IntermediateRouteResultType.Succeed:
+        {
+          const succeed = currentHistory as IntermediateRouteSucceed;
+          const grid = makeRouteResultGridFromConnections(routeMap.size, [
+            ...succeed.connectionHistory,
+            succeed.newConnection,
+          ]);
+          setRouteResult(grid);
+        }
+        break;
+      case IntermediateRouteResultType.FailNet:
+        {
+          const failNet = currentHistory as IntermediateRouteFailNet;
+          const grid = makeRouteResultGridFromConnections(
+            routeMap.size,
+            failNet.connectionHistory
+          );
+          setRouteResult(grid);
+        }
+        break;
+      default:
+        console.error("should not reach here");
+    }
+  }, [currentHistory]);
+
   const routingHistory = (
     <List>
       {routeHistory.map((result, i) => {
@@ -189,17 +208,8 @@ function App() {
               <ListItem
                 button
                 key={`history ${i}`}
-                onClick={() => {
-                  if (!routeMap) return;
-                  const grid = makeRouteResultGridFromConnections(
-                    routeMap.size,
-                    [
-                      ...succeedResult.connectionHistory,
-                      succeedResult.newConnection,
-                    ]
-                  );
-                  setRouteResult(grid);
-                }}
+                onClick={() => setCurrentHistory(result)}
+                selected={result === currentHistory}
               >
                 <Box color="success.main" className="icon-alignment">
                   <CheckIcon fontSize="small" />
@@ -215,14 +225,8 @@ function App() {
               <ListItem
                 button
                 key={`history ${i}`}
-                onClick={() => {
-                  if (!routeMap) return;
-                  const grid = makeRouteResultGridFromConnections(
-                    routeMap.size,
-                    failNetResult.connectionHistory
-                  );
-                  setRouteResult(grid);
-                }}
+                onClick={() => setCurrentHistory(result)}
+                selected={result === currentHistory}
               >
                 <Box color="error.main" className="icon-alignment">
                   <ErrorOutlineIcon fontSize="small" />
