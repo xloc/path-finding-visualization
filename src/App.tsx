@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   AppBar,
-  Box,
   createStyles,
   CssBaseline,
   Drawer,
@@ -14,11 +13,6 @@ import {
   Toolbar,
   Typography,
 } from "@material-ui/core";
-import {
-  CheckCircle as CheckIcon,
-  ErrorOutline as ErrorOutlineIcon,
-  RemoveCircle as BannedIcon,
-} from "@material-ui/icons";
 
 /// User Component Imports
 import theme from "./theme";
@@ -193,64 +187,48 @@ function App() {
           setRouteResult(grid);
         }
         break;
+      case IntermediateRouteResultType.FailAll:
+        break;
       default:
         console.error("should not reach here");
     }
-  }, [currentHistory]);
+  }, [currentHistory, routeMap]);
 
   const routingHistory = (
     <List>
-      {routeHistory.map((result, i) => {
-        switch (result.type) {
-          case IntermediateRouteResultType.Succeed:
-            const succeedResult = result as IntermediateRouteSucceed;
-            return (
-              <ListItem
-                button
-                key={`history ${i}`}
-                onClick={() => setCurrentHistory(result)}
-                selected={result === currentHistory}
-              >
-                <Box color="success.main" className="icon-alignment">
-                  <CheckIcon fontSize="small" />
-                </Box>
-                <ConnectSucceed
-                  result={result as IntermediateRouteSucceed}
-                ></ConnectSucceed>
-              </ListItem>
-            );
-          case IntermediateRouteResultType.FailNet:
-            const failNetResult = result as IntermediateRouteFailNet;
-            return (
-              <ListItem
-                button
-                key={`history ${i}`}
-                onClick={() => setCurrentHistory(result)}
-                selected={result === currentHistory}
-              >
-                <Box color="error.main" className="icon-alignment">
-                  <ErrorOutlineIcon fontSize="small" />
-                </Box>
-                <ConnectFailNet
-                  result={result as IntermediateRouteFailNet}
-                ></ConnectFailNet>
-              </ListItem>
-            );
-          case IntermediateRouteResultType.FailAll:
-            return (
-              <ListItem button key={`history ${i}`}>
-                <Box color="error.main" className="icon-alignment">
-                  <BannedIcon fontSize="small" />
-                </Box>
-                <ConnectFailAll
-                  result={result as IntermediateRouteFailAll}
-                ></ConnectFailAll>
-              </ListItem>
-            );
-          default:
-            return "0";
-        }
-      })}
+      {routeHistory.map((result, i) => (
+        <ListItem
+          button
+          key={`history ${i}`}
+          onClick={() => setCurrentHistory(result)}
+          selected={result === currentHistory}
+        >
+          {(() => {
+            switch (result.type) {
+              case IntermediateRouteResultType.Succeed:
+                return (
+                  <ConnectSucceed
+                    result={result as IntermediateRouteSucceed}
+                  ></ConnectSucceed>
+                );
+              case IntermediateRouteResultType.FailNet:
+                return (
+                  <ConnectFailNet
+                    result={result as IntermediateRouteFailNet}
+                  ></ConnectFailNet>
+                );
+              case IntermediateRouteResultType.FailAll:
+                return (
+                  <ConnectFailAll
+                    result={result as IntermediateRouteFailAll}
+                  ></ConnectFailAll>
+                );
+              default:
+                return "0";
+            }
+          })()}
+        </ListItem>
+      ))}
     </List>
   );
 
