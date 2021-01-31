@@ -9,7 +9,7 @@ import {
   IntermediateRouteFailAll,
   IntermediateRouteFailNet,
   IntermediateRouteSucceed,
-} from "../Routers/Router";
+} from "../Routers/RouteResults";
 import NetColors from "./NetColorTheme";
 import "./RouteProgressEntry.css";
 import { v4 as uuidv4 } from "uuid";

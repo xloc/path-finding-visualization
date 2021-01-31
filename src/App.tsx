@@ -26,18 +26,18 @@ import {
 /// User Model Imports
 import { Grid as GridModel, GridSize } from "./Models/Grid";
 import { RouteMap } from "./Models/RouteMap";
-import {
-  route,
-  MapRouteSuccess,
-  IntermediateRouteResultType,
-  IntermediateRouteResult,
-  IntermediateRouteSucceed,
-  IntermediateRouteFailNet,
-  IntermediateRouteFailAll,
-  Connection,
-} from "./Routers/Router";
+import { route } from "./Routers/Router";
 import { RouteResult, RouteResultCell } from "./Models/RouteResult";
 import { useRouteMapSelector } from "./Components/useRouteMapSelector";
+import Connection from "./Models/Connection";
+import {
+  IntermediateRouteFailAll,
+  IntermediateRouteFailNet,
+  IntermediateRouteResult,
+  IntermediateRouteResultType,
+  IntermediateRouteSucceed,
+  MapRouteSuccess,
+} from "./Routers/RouteResults";
 
 function makeRouteResultGridFromConnections(
   size: GridSize,

@@ -1,28 +1,20 @@
-import { Grid, GridSize } from "../Models/Grid";
+import Connection from "../Models/Connection";
+import { Grid } from "../Models/Grid";
 import { Coors, Net, RouteMap } from "../Models/RouteMap";
-
-export interface Connection {
-  netID: number;
-  segments: Array<Coors>;
-}
-
-interface ConnectionRoutingResult {
-  succeed: boolean;
-}
-
-interface ConnectionRoutingSuccess extends ConnectionRoutingResult {
-  connectedPin: Coors;
-  segments: Array<Coors>;
-}
-
-function adjacentCoors(i: number, j: number): Array<Coors> {
-  return [
-    [i + 1, j],
-    [i - 1, j],
-    [i, j + 1],
-    [i, j - 1],
-  ];
-}
+import { adjacentCoors, makeObstacleGrid, makeTargetGrid } from "./utils";
+import {
+  ConnectionRoutingResult,
+  ConnectionRoutingSuccess,
+  IntermediateRouteFailAll,
+  IntermediateRouteFailNet,
+  IntermediateRouteResult,
+  IntermediateRouteResultType,
+  IntermediateRouteSucceed,
+  MapRouteResult,
+  MapRouteSuccess,
+  NetRoutingResult,
+  NetRoutingSuccess,
+} from "./RouteResults";
 
 export function routeConnection(
   obstacleGrid: Grid<boolean>,
@@ -95,24 +87,6 @@ export function routeConnection(
   } as ConnectionRoutingSuccess;
 }
 
-function makeTargetGrid(size: GridSize, targets: Array<Coors>) {
-  const grid = new Grid(size, (i, j) => {
-    return false;
-  });
-
-  targets.forEach(([i, j]) => {
-    grid.grid[i][j] = true;
-  });
-
-  return grid;
-}
-
-export interface NetRoutingResult {
-  succeed: boolean;
-}
-export interface NetRoutingSuccess extends NetRoutingResult {
-  connection: Connection;
-}
 export function routeNet(
   obstacleGrid: Grid<boolean>,
   net: Net
@@ -146,77 +120,6 @@ export function routeNet(
       },
     } as NetRoutingSuccess;
   }
-}
-
-export function makeObstacleGrid(
-  routeMap: RouteMap,
-  routingNetID: number,
-  routedConnections: Array<Connection>
-) {
-  const grid = new Grid(routeMap.size, (i, j) => {
-    return false;
-  });
-
-  /// walls are obstacles
-  routeMap.walls.forEach(([i, j]) => {
-    grid.grid[i][j] = true;
-  });
-
-  /// net pins that are not in the routing net are obstacles
-  routeMap.nets
-    .filter((net) => net.netID !== routingNetID)
-    .forEach((net) => {
-      net.pins.forEach(([i, j]) => {
-        grid.grid[i][j] = true;
-      });
-    });
-
-  /// routed connection are obstacles
-  routedConnections.forEach((connection) => {
-    connection.segments.forEach(([i, j]) => {
-      grid.grid[i][j] = true;
-    });
-  });
-
-  return grid;
-}
-
-export interface MapRouteResult {
-  succeed: boolean;
-}
-
-export interface MapRouteSuccess extends MapRouteResult {
-  netRouteSequence: Array<Net>;
-  connections: Array<Connection>;
-}
-
-export interface RouteQueueItem {
-  priority: number;
-  net: Net;
-}
-
-export interface IntermediateRouteSucceed extends IntermediateRouteResult {
-  connectionHistory: Array<Connection>;
-  newConnection: Connection;
-}
-
-export interface IntermediateRouteFailNet extends IntermediateRouteResult {
-  connectionHistory: Array<Connection>;
-  failedNet: Net;
-}
-
-export interface IntermediateRouteFailAll extends IntermediateRouteResult {
-  connectionHistory: Array<Connection>;
-}
-
-export enum IntermediateRouteResultType {
-  Succeed = 0,
-  FailNet,
-  FailAll,
-}
-
-export interface IntermediateRouteResult {
-  type: IntermediateRouteResultType;
 }
 
 export function route(
