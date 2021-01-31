@@ -138,9 +138,15 @@ function App() {
     });
   };
 
+  const [
+    currentHistory,
+    setCurrentHistory,
+  ] = useState<IntermediateRouteResult>();
+
   useEffect(() => {
     if (!routeMap) return;
 
+    setCurrentHistory(undefined);
     setRouteHistory([]);
     const routeResult = route(routeMap, innerResultCallback);
 
@@ -158,10 +164,6 @@ function App() {
     setRouteResult(grid);
   }, [routeMap]);
 
-  const [
-    currentHistory,
-    setCurrentHistory,
-  ] = useState<IntermediateRouteResult>();
   useEffect(() => {
     if (!routeMap) return;
     if (!currentHistory) return;
@@ -192,7 +194,8 @@ function App() {
       default:
         console.error("should not reach here");
     }
-  }, [currentHistory, routeMap]);
+    /// TODO: figure out why adding routeMap leads to problem
+  }, [currentHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const routingHistory = (
     <List>
