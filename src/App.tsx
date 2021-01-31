@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   AppBar,
   createStyles,
@@ -26,7 +25,7 @@ import {
 
 /// User Model Imports
 import { Grid as GridModel, GridSize } from "./Models/Grid";
-import { parseRoutingMapString, RouteMap } from "./Models/RouteMap";
+import { RouteMap } from "./Models/RouteMap";
 import {
   route,
   MapRouteSuccess,
@@ -38,6 +37,7 @@ import {
   Connection,
 } from "./Routers/Router";
 import { RouteResult, RouteResultCell } from "./Models/RouteResult";
+import { useRouteMapSelector } from "./Components/useRouteMapSelector";
 
 function makeRouteResultGridFromConnections(
   size: GridSize,
@@ -94,38 +94,7 @@ function App() {
   const [routeMap, setRouteMap] = useState<RouteMap>();
   const classes = useStyles();
 
-  const [infiles, setInfiles] = useState<Array<string>>();
-  useEffect(() => {
-    axios.get("benchmarks/infiles.json").then((res) => {
-      setInfiles(res.data);
-    });
-    return () => {};
-  }, []);
-
-  const [mapName, setMapName] = useState("impossible.infile");
-  useEffect(() => {
-    if (mapName === "") return;
-    axios.get<string>(`benchmarks/${mapName}`).then((res) => {
-      setRouteMap(parseRoutingMapString(res.data));
-    });
-
-    /// TODO clean up
-  }, [mapName]);
-
-  const routingMapList = (
-    <List>
-      {infiles?.map((filename) => (
-        <ListItem
-          button
-          key={filename}
-          onClick={() => setMapName(filename)}
-          selected={filename === mapName}
-        >
-          {filename.split(".")[0]}
-        </ListItem>
-      ))}
-    </List>
-  );
+  const { routeMapSelector, mapName } = useRouteMapSelector(setRouteMap);
 
   const [routeHistory, setRouteHistory] = useState(
     [] as Array<IntermediateRouteResult>
@@ -253,7 +222,7 @@ function App() {
           className={classes.circuitDrawer}
           classes={{ paper: classes.circuitDrawerPaper }}
         >
-          {routingMapList}
+          {routeMapSelector}
         </Drawer>
         <main className={classes.content}>
           <div className={classes.toolbar} />
