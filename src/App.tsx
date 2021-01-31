@@ -210,8 +210,20 @@ function App() {
               </ListItem>
             );
           case IntermediateRouteResultType.FailNet:
+            const failNetResult = result as IntermediateRouteFailNet;
             return (
-              <ListItem button key={`history ${i}`}>
+              <ListItem
+                button
+                key={`history ${i}`}
+                onClick={() => {
+                  if (!routeMap) return;
+                  const grid = makeRouteResultGridFromConnections(
+                    routeMap.size,
+                    failNetResult.connectionHistory
+                  );
+                  setRouteResult(grid);
+                }}
+              >
                 <Box color="error.main" className="icon-alignment">
                   <ErrorOutlineIcon fontSize="small" />
                 </Box>
