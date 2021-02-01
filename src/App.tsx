@@ -118,20 +118,20 @@ function App() {
     setCurrentHistory(undefined);
     setRouteHistory([]);
 
-    routeCircuit(routeMap, innerResultCallback).then((routeResult) => {
-      if (!routeResult.succeed) {
-        setRouteResult(undefined);
-        return;
-      }
-      const succeed = routeResult as MapRouteSuccess;
-      console.log(succeed);
+    const routeResult = routeCircuit(routeMap, innerResultCallback);
 
-      const grid = makeRouteResultGridFromConnections(
-        routeMap.size,
-        succeed.connections
-      );
-      setRouteResult(grid);
-    });
+    if (!routeResult.succeed) {
+      setRouteResult(undefined);
+      return;
+    }
+    const succeed = routeResult as MapRouteSuccess;
+    console.log(succeed);
+
+    const grid = makeRouteResultGridFromConnections(
+      routeMap.size,
+      succeed.connections
+    );
+    setRouteResult(grid);
   }, [routeMap]);
 
   useEffect(() => {
