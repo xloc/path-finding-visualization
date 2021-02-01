@@ -96,12 +96,12 @@ function App() {
 
   const { routeMapSelector, mapName } = useRouteMapSelector(setRouteMap);
 
-  const [routeHistory, setRouteHistory] = useState(
+  const [routeHistories, setRouteHistories] = useState(
     [] as Array<IntermediateRouteResult>
   );
 
   const innerResultCallback = (result: IntermediateRouteResult) => {
-    setRouteHistory((prev) => {
+    setRouteHistories((prev) => {
       if (prev.length > 100) return prev;
       return [...prev, result];
     });
@@ -116,7 +116,7 @@ function App() {
     if (!routeMap) return;
 
     setCurrentHistory(undefined);
-    setRouteHistory([]);
+    setRouteHistories([]);
 
     const routeResult = routeCircuit(routeMap, innerResultCallback);
 
@@ -169,7 +169,7 @@ function App() {
 
   const routingHistory = (
     <List>
-      {routeHistory.map((result, i) => (
+      {routeHistories.map((result, i) => (
         <ListItem
           button
           key={`history ${i}`}
