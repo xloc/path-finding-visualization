@@ -117,20 +117,21 @@ function App() {
 
     setCurrentHistory(undefined);
     setRouteHistory([]);
-    const routeResult = routeCircuit(routeMap, innerResultCallback);
 
-    if (!routeResult.succeed) {
-      setRouteResult(undefined);
-      return;
-    }
-    const succeed = routeResult as MapRouteSuccess;
-    console.log(succeed);
+    routeCircuit(routeMap, innerResultCallback).then((routeResult) => {
+      if (!routeResult.succeed) {
+        setRouteResult(undefined);
+        return;
+      }
+      const succeed = routeResult as MapRouteSuccess;
+      console.log(succeed);
 
-    const grid = makeRouteResultGridFromConnections(
-      routeMap.size,
-      succeed.connections
-    );
-    setRouteResult(grid);
+      const grid = makeRouteResultGridFromConnections(
+        routeMap.size,
+        succeed.connections
+      );
+      setRouteResult(grid);
+    });
   }, [routeMap]);
 
   useEffect(() => {

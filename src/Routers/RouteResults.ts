@@ -1,4 +1,5 @@
 import Connection from "../Models/Connection";
+import { Grid } from "../Models/Grid";
 import { Coors, Net } from "../Models/RouteMap";
 
 export interface ConnectionRoutingResult {
@@ -50,4 +51,17 @@ export enum IntermediateRouteResultType {
 
 export interface IntermediateRouteResult {
   type: IntermediateRouteResultType;
+}
+
+/////
+export class NetRouteProgress {
+  constructor() {}
+}
+
+export class ExpandProgress {
+  constructor(public grid: Grid<boolean>) {}
+}
+
+export interface BacktrackProgress {
+  grid: Grid<boolean>;
 }

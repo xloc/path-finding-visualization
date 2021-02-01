@@ -17,4 +17,24 @@ export class Grid<T> {
           .map((nouse, j) => initializer(i, j))
       );
   }
+
+  map<U>(fn: (val: T, i: number, j: number) => U) {
+    return {
+      size: { ...this.size },
+      grid: this.grid.map((row: Array<T>, i) => {
+        return row.map((val: T, j) => {
+          return fn(val, i, j);
+        });
+      }),
+    } as Grid<U>;
+  }
+
+  copy() {
+    return {
+      size: { ...this.size },
+      grid: this.grid.map((row) => {
+        return [...row];
+      }),
+    } as Grid<T>;
+  }
 }

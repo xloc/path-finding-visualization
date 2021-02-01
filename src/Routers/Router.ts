@@ -14,13 +14,26 @@ import {
   MapRouteSuccess,
   NetRoutingResult,
   NetRoutingSuccess,
+  NetRouteProgress,
+  ExpandProgress,
+  BacktrackProgress,
 } from "./RouteResults";
 
-export function routeConnection(
+export const buildExpandProgress = (progressGrid: Grid<number>) => {
+  return new ExpandProgress(
+    progressGrid.map((val) => {
+      return val >= 0;
+    })
+  );
+};
+
+export async function routeConnection(
   obstacleGrid: Grid<boolean>,
   sources: Array<Coors>,
-  targetGrid: Grid<boolean>
-): ConnectionRoutingResult {
+  targetGrid: Grid<boolean>,
+  onExpand?: (arg0: ExpandProgress) => Promise<void>,
+  onBacktrack?: (arg0: BacktrackProgress) => Promise<void>
+): Promise<ConnectionRoutingResult> {
   const { col, row } = obstacleGrid.size;
   const progressGrid = new Grid<number>(obstacleGrid.size, (i, j) => -1);
   const inRange = (i: number, j: number) =>
@@ -57,6 +70,7 @@ export function routeConnection(
       expansionList = newExpansionList;
       iExpand++;
     }
+    if (onExpand) await onExpand(buildExpandProgress(progressGrid));
   }
 
   if (!connectedTargetCoors) {
@@ -87,17 +101,18 @@ export function routeConnection(
   } as ConnectionRoutingSuccess;
 }
 
-export function routeNet(
+export async function routeNet(
   obstacleGrid: Grid<boolean>,
-  net: Net
-): NetRoutingResult {
+  net: Net,
+  onProgress: (arg0: NetRouteProgress) => Promise<void> = async () => {}
+): Promise<NetRoutingResult> {
   const [sourcePin, ...targets] = net.pins;
   let sources = [sourcePin];
   const targetGrid = makeTargetGrid(obstacleGrid.size, targets);
   let nTargets = targets.length;
 
   while (nTargets > 0) {
-    const result = routeConnection(obstacleGrid, sources, targetGrid);
+    const result = await routeConnection(obstacleGrid, sources, targetGrid);
     /// fail to route this net if connection route is fail
     if (!result.succeed) break;
     const success = result as ConnectionRoutingSuccess;
@@ -122,14 +137,14 @@ export function routeNet(
   }
 }
 
-export function routeCircuit(
+export async function routeCircuit(
   routeMap: RouteMap,
   yieldResultCallback: (arg0: IntermediateRouteResult) => void
-): MapRouteResult {
-  function tryToRoute(
+): Promise<MapRouteResult> {
+  async function tryToRoute(
     nets: Array<Net>,
     routedConnections: Array<Connection>
-  ): MapRouteResult {
+  ): Promise<MapRouteResult> {
     if (nets.length === 0) {
       return {
         succeed: true,
@@ -143,7 +158,7 @@ export function routeCircuit(
 
       /// try to route the net
       const obstacleGrid = makeObstacleGrid(routeMap, i, routedConnections);
-      const netResult = routeNet(obstacleGrid, net);
+      const netResult = await routeNet(obstacleGrid, net);
       if (!netResult.succeed) {
         yieldResultCallback({
           type: IntermediateRouteResultType.FailNet,
@@ -161,7 +176,7 @@ export function routeCircuit(
 
       /// if this net can be connected => try route other nets
       const otherNets = [...nets.slice(0, i), ...nets.slice(i + 1)];
-      const otherNetResult = tryToRoute(otherNets, [
+      const otherNetResult = await tryToRoute(otherNets, [
         ...routedConnections,
         netSucceed.connection,
       ]);
