@@ -36,10 +36,13 @@ function makeRouteMapGrid(routeMap: RouteMap): Array<Array<RouteMapCellAttr>> {
 }
 
 type GridProps = {
-  routeMap: RouteMap;
-  routeResult: RouteResult | undefined;
+  circuit: RouteMap;
+  segments: RouteResult | undefined;
 };
-export default function Grid({ routeMap, routeResult }: GridProps) {
+export default function Grid({
+  circuit: routeMap,
+  segments: routeResult,
+}: GridProps) {
   const [routeMapGrid, setRouteMapGrid] = useState(() =>
     makeRouteMapGrid(routeMap)
   );
@@ -57,7 +60,7 @@ export default function Grid({ routeMap, routeResult }: GridProps) {
                 <GridCell
                   key={`grid-cell ${i} ${j}`}
                   mapCell={cell}
-                  routeResultCell={routeResult?.grid[i][j]}
+                  segment={routeResult?.grid[i][j]}
                 />
               );
             })}
@@ -70,9 +73,9 @@ export default function Grid({ routeMap, routeResult }: GridProps) {
 
 type GridCellProps = {
   mapCell: RouteMapCellAttr;
-  routeResultCell: RouteResultCell | undefined;
+  segment: RouteResultCell | undefined;
 };
-export function GridCell({ mapCell, routeResultCell }: GridCellProps) {
+export function GridCell({ mapCell, segment }: GridCellProps) {
   let color = "#ccc";
   if (mapCell.isWall) {
     color = "black";
@@ -80,9 +83,9 @@ export function GridCell({ mapCell, routeResultCell }: GridCellProps) {
     color = NetColors[mapCell.netID];
   }
 
-  if (routeResultCell) {
-    if (routeResultCell.netId !== -1) {
-      color = NetColors[routeResultCell.netId];
+  if (segment) {
+    if (segment.netId !== -1) {
+      color = NetColors[segment.netId];
     }
   }
   return (

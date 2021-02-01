@@ -1,6 +1,7 @@
 import Connection from "../Models/Connection";
 import { Grid, GridSize } from "../Models/Grid";
 import { Coors, Net, RouteMap } from "../Models/RouteMap";
+import { RouteResultCell } from "../Models/RouteResult";
 
 export function makeTargetGrid(size: GridSize, targets: Array<Coors>) {
   const grid = new Grid(size, (i, j) => {
@@ -54,5 +55,20 @@ export function makeObstacleGrid(
     });
   });
 
+  return grid;
+}
+
+export function makeRouteResultGridFromConnections(
+  size: GridSize,
+  connections: Array<Connection>
+) {
+  const grid = new Grid<RouteResultCell>(size, (i, j) => ({
+    netId: -1,
+  }));
+  connections.forEach((conn) => {
+    conn.segments.forEach(([i, j]) => {
+      grid.grid[i][j].netId = conn.netID;
+    });
+  });
   return grid;
 }

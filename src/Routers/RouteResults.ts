@@ -54,9 +54,15 @@ export interface IntermediateRouteResult {
 }
 
 /////
-export class NetRouteProgress {
-  constructor() {}
-}
+export type ConnectionProgress =
+  | {
+      type: "expand";
+      progress: ExpandProgress;
+    }
+  | {
+      type: "backtrack";
+      progress: BacktrackProgress;
+    };
 
 export class ExpandProgress {
   constructor(public visited: Grid<number>, public active: Grid<boolean>) {}

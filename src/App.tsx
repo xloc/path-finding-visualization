@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   AppBar,
+  Container,
   createStyles,
   CssBaseline,
   Drawer,
@@ -12,6 +13,7 @@ import {
   Toolbar,
   Typography,
 } from "@material-ui/core";
+import Slider from "@material-ui/core/Slider";
 
 /// User Component Imports
 import theme from "./theme";
@@ -26,11 +28,18 @@ import {
 /// User Model Imports
 import { Grid as GridModel, GridSize } from "./Models/Grid";
 import { RouteMap } from "./Models/RouteMap";
-import { routeCircuit } from "./Routers/Router";
+import {
+  CircuitRouteHistory,
+  ConnectionRouteHistory,
+  NetRouteHistory,
+  routeCircuit,
+  routeCircuitUntilFail,
+} from "./Routers/Router";
 import { RouteResult, RouteResultCell } from "./Models/RouteResult";
 import { useRouteMapSelector } from "./Components/useRouteMapSelector";
 import Connection from "./Models/Connection";
 import {
+  ConnectionProgress,
   IntermediateRouteFailAll,
   IntermediateRouteFailNet,
   IntermediateRouteResult,
@@ -38,24 +47,10 @@ import {
   IntermediateRouteSucceed,
   MapRouteSuccess,
 } from "./Routers/RouteResults";
-
-function makeRouteResultGridFromConnections(
-  size: GridSize,
-  connections: Array<Connection>
-) {
-  const grid = new GridModel<RouteResultCell>(size, (i, j) => ({
-    netId: -1,
-  }));
-  connections.forEach((conn) => {
-    conn.segments.forEach(([i, j]) => {
-      grid.grid[i][j].netId = conn.netID;
-    });
-  });
-  return grid;
-}
+import { makeRouteResultGridFromConnections } from "./Routers/utils";
 
 const circuitDrawerWidth = 150;
-const historyDrawerWidth = 150;
+const historyDrawerWidth = 200;
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -89,6 +84,18 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
+const buildRouteProgress = (progress: CircuitRouteHistory) => {
+  const currentProgress: Array<[NetRouteHistory, ConnectionProgress]> = [];
+  for (const netH of progress.netHistories) {
+    for (const connH of netH.connectionHistories) {
+      for (const p of connH.progress) {
+        currentProgress.push([netH, p]);
+      }
+    }
+  }
+  return currentProgress;
+};
+
 function App() {
   const [routeResult, setRouteResult] = useState<RouteResult>();
   const [routeMap, setRouteMap] = useState<RouteMap>();
@@ -102,8 +109,10 @@ function App() {
 
   const innerResultCallback = (result: IntermediateRouteResult) => {
     setRouteHistories((prev) => {
-      if (prev.length > 100) return prev;
-      return [...prev, result];
+      if (prev.length > 200) return prev;
+      if (result.type === IntermediateRouteResultType.Succeed)
+        return [...prev, result];
+      else return prev;
     });
   };
 
@@ -167,6 +176,81 @@ function App() {
     /// TODO: figure out why adding routeMap leads to problem
   }, [currentHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [currentProgress, setCurrentProgress] = useState<
+    Array<[NetRouteHistory, ConnectionProgress]>
+  >();
+  useEffect(() => {
+    if (!routeMap) return;
+    if (!currentHistory) return;
+
+    switch (currentHistory.type) {
+      case IntermediateRouteResultType.Succeed:
+        {
+          const succeed = currentHistory as IntermediateRouteSucceed;
+
+          const progress = new CircuitRouteHistory([]);
+          routeCircuitUntilFail(
+            routeMap,
+            [...succeed.connectionHistory, succeed.newConnection]
+              .map((conn) => conn.netID)
+              .map((id) => routeMap.nets[id]),
+            progress
+          );
+
+          setCurrentProgress(buildRouteProgress(progress));
+        }
+        break;
+      case IntermediateRouteResultType.FailNet:
+        {
+          const failNet = currentHistory as IntermediateRouteFailNet;
+
+          const progress = new CircuitRouteHistory([]);
+          routeCircuitUntilFail(
+            routeMap,
+            [
+              ...failNet.connectionHistory
+                .map((conn) => conn.netID)
+                .map((id) => routeMap.nets[id]),
+              failNet.failedNet,
+            ],
+            progress
+          );
+
+          setCurrentProgress(buildRouteProgress(progress));
+        }
+        break;
+      case IntermediateRouteResultType.FailAll:
+        break;
+      default:
+        console.error("should not reach here");
+    }
+  }, [currentHistory]);
+
+  useEffect(() => {
+    if (!currentProgress) return;
+    // console.log(currentProgress);
+  }, [currentProgress]);
+
+  const [currentProgressIndex, setCurrentProgressIndex] = useState(0);
+
+  useEffect(() => {
+    if (!routeMap || !currentProgress || !currentProgressIndex) return;
+
+    const [netHistory, progress] = currentProgress[currentProgressIndex];
+
+    // setRouteResult();
+  }, [currentProgressIndex]);
+
+  const progressSlide = currentProgress ? (
+    <Slider
+      onChange={(e, val) => setCurrentProgressIndex(val as number)}
+      min={0}
+      max={currentProgress.length - 1}
+    />
+  ) : (
+    <Slider disabled />
+  );
+
   const routingHistory = (
     <List>
       {routeHistories.map((result, i) => (
@@ -228,10 +312,11 @@ function App() {
         <main className={classes.content}>
           <div className={classes.toolbar} />
           {routeMap ? (
-            <Grid routeMap={routeMap} routeResult={routeResult} />
+            <Grid circuit={routeMap} segments={routeResult} />
           ) : (
             <></>
           )}
+          <div>{progressSlide}</div>
         </main>
         <Drawer
           open={true}

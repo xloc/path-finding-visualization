@@ -1,7 +1,12 @@
 import Connection from "../Models/Connection";
 import { Grid } from "../Models/Grid";
 import { Coors, Net, RouteMap } from "../Models/RouteMap";
-import { adjacentCoors, makeObstacleGrid, makeTargetGrid } from "./utils";
+import {
+  adjacentCoors,
+  makeObstacleGrid,
+  makeRouteResultGridFromConnections,
+  makeTargetGrid,
+} from "./utils";
 import {
   ConnectionRoutingResult,
   ConnectionRoutingSuccess,
@@ -14,10 +19,11 @@ import {
   MapRouteSuccess,
   NetRoutingResult,
   NetRoutingSuccess,
-  NetRouteProgress,
   ExpandProgress,
   BacktrackProgress,
+  ConnectionProgress,
 } from "./RouteResults";
+import { RouteResultCell } from "../Models/RouteResult";
 
 export const buildExpandProgress = (progressGrid: Grid<number>) => {
   return new ExpandProgress(
@@ -29,10 +35,7 @@ export const buildExpandProgress = (progressGrid: Grid<number>) => {
 };
 
 export class ConnectionRouteHistory {
-  constructor(
-    public expand: Array<ExpandProgress>,
-    public backtrack: Array<BacktrackProgress>
-  ) {}
+  constructor(public progress: Array<ConnectionProgress>) {}
 }
 
 export type ConnectionRouter = (
@@ -85,7 +88,10 @@ export function dijkstraRoute(
       iExpand++;
     }
     if (historyRecord)
-      historyRecord.expand.push(buildExpandProgress(progressGrid));
+      historyRecord.progress.push({
+        type: "expand",
+        progress: buildExpandProgress(progressGrid),
+      });
   }
 
   if (!connectedTargetCoors) {
@@ -105,9 +111,10 @@ export function dijkstraRoute(
     /* eslint-enable no-loop-func */
 
     if (historyRecord)
-      historyRecord.backtrack.push(
-        new BacktrackProgress(progressGrid, segments, [i, j])
-      );
+      historyRecord.progress.push({
+        type: "backtrack",
+        progress: new BacktrackProgress(progressGrid, segments, [i, j]),
+      });
 
     if (progressGrid.grid[i][j] === 0) break;
     segments.push([i, j]);
@@ -124,7 +131,7 @@ export function dijkstraRoute(
 export class NetRouteHistory {
   constructor(
     public net: Net,
-    public obstacleGrid: Grid<boolean>,
+    public wireGrid: Grid<RouteResultCell>,
     public connectionHistories: Array<ConnectionRouteHistory>
   ) {}
 }
@@ -142,7 +149,7 @@ export function routeNet(
 
   const getConnectionHistory = () => {
     if (historyRecord) {
-      const ch = new ConnectionRouteHistory([], []);
+      const ch = new ConnectionRouteHistory([]);
       historyRecord.connectionHistories.push(ch);
       return ch;
     } else {
@@ -177,8 +184,8 @@ export function routeNet(
   }
 }
 
-export interface CircuitRouteHistory {
-  netHistories: Array<NetRouteHistory>;
+export class CircuitRouteHistory {
+  constructor(public netHistories: Array<NetRouteHistory>) {}
 }
 
 export const routeCircuitUntilFail = (
@@ -188,11 +195,14 @@ export const routeCircuitUntilFail = (
 ) => {
   const routedConnections: Array<Connection> = [];
   for (const net of netSequence) {
-    const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
-
-    const netHistory = new NetRouteHistory(net, obstacleGrid, []);
+    const wireGrid = makeRouteResultGridFromConnections(
+      routeMap.size,
+      routedConnections
+    );
+    const netHistory = new NetRouteHistory(net, wireGrid, []);
     historyRecord.netHistories.push(netHistory);
 
+    const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
     const netResult = routeNet(obstacleGrid, net, dijkstraRoute, netHistory);
     if (!netResult.succeed) break;
   }
