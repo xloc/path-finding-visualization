@@ -21,18 +21,32 @@ import {
 
 export const buildExpandProgress = (progressGrid: Grid<number>) => {
   return new ExpandProgress(
+    progressGrid.copy(),
     progressGrid.map((val) => {
-      return val >= 0;
+      return val === -2;
     })
   );
 };
 
-export function routeConnection(
+export class ConnectionRouteHistory {
+  constructor(
+    public expand: Array<ExpandProgress>,
+    public backtrack: Array<BacktrackProgress>
+  ) {}
+}
+
+export type ConnectionRouter = (
   obstacleGrid: Grid<boolean>,
   sources: Array<Coors>,
   targetGrid: Grid<boolean>,
-  onExpand?: (arg0: ExpandProgress) => void,
-  onBacktrack?: (arg0: BacktrackProgress) => void
+  historyRecord?: ConnectionRouteHistory
+) => ConnectionRoutingResult;
+
+export function dijkstraRoute(
+  obstacleGrid: Grid<boolean>,
+  sources: Array<Coors>,
+  targetGrid: Grid<boolean>,
+  historyRecord?: ConnectionRouteHistory
 ): ConnectionRoutingResult {
   const { col, row } = obstacleGrid.size;
   const progressGrid = new Grid<number>(obstacleGrid.size, (i, j) => -1);
@@ -70,7 +84,8 @@ export function routeConnection(
       expansionList = newExpansionList;
       iExpand++;
     }
-    if (onExpand) onExpand(buildExpandProgress(progressGrid));
+    if (historyRecord)
+      historyRecord.expand.push(buildExpandProgress(progressGrid));
   }
 
   if (!connectedTargetCoors) {
@@ -89,6 +104,11 @@ export function routeConnection(
     })[0];
     /* eslint-enable no-loop-func */
 
+    if (historyRecord)
+      historyRecord.backtrack.push(
+        new BacktrackProgress(progressGrid, segments, [i, j])
+      );
+
     if (progressGrid.grid[i][j] === 0) break;
     segments.push([i, j]);
     iPrevLayer--;
@@ -101,18 +121,38 @@ export function routeConnection(
   } as ConnectionRoutingSuccess;
 }
 
+export class NetRouteHistory {
+  constructor(
+    public net: Net,
+    public obstacleGrid: Grid<boolean>,
+    public connectionHistories: Array<ConnectionRouteHistory>
+  ) {}
+}
+
 export function routeNet(
   obstacleGrid: Grid<boolean>,
   net: Net,
-  onProgress: (arg0: NetRouteProgress) => Promise<void> = async () => {}
+  connectionRouter: ConnectionRouter,
+  historyRecord?: NetRouteHistory
 ): NetRoutingResult {
   const [sourcePin, ...targets] = net.pins;
   let sources = [sourcePin];
   const targetGrid = makeTargetGrid(obstacleGrid.size, targets);
   let nTargets = targets.length;
 
+  const getConnectionHistory = () => {
+    if (historyRecord) {
+      const ch = new ConnectionRouteHistory([], []);
+      historyRecord.connectionHistories.push(ch);
+      return ch;
+    } else {
+      return undefined;
+    }
+  };
+
   while (nTargets > 0) {
-    const result = routeConnection(obstacleGrid, sources, targetGrid);
+    const h = getConnectionHistory();
+    const result = connectionRouter(obstacleGrid, sources, targetGrid, h);
     /// fail to route this net if connection route is fail
     if (!result.succeed) break;
     const success = result as ConnectionRoutingSuccess;
@@ -137,6 +177,27 @@ export function routeNet(
   }
 }
 
+export interface CircuitRouteHistory {
+  netHistories: Array<NetRouteHistory>;
+}
+
+export const routeCircuitUntilFail = (
+  routeMap: RouteMap,
+  netSequence: Array<Net>,
+  historyRecord: CircuitRouteHistory
+) => {
+  const routedConnections: Array<Connection> = [];
+  for (const net of netSequence) {
+    const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
+
+    const netHistory = new NetRouteHistory(net, obstacleGrid, []);
+    historyRecord.netHistories.push(netHistory);
+
+    const netResult = routeNet(obstacleGrid, net, dijkstraRoute, netHistory);
+    if (!netResult.succeed) break;
+  }
+};
+
 export function routeCircuit(
   routeMap: RouteMap,
   yieldResultCallback: (arg0: IntermediateRouteResult) => void
@@ -157,8 +218,8 @@ export function routeCircuit(
       const net = nets[i];
 
       /// try to route the net
-      const obstacleGrid = makeObstacleGrid(routeMap, i, routedConnections);
-      const netResult = routeNet(obstacleGrid, net);
+      const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
+      const netResult = routeNet(obstacleGrid, net, dijkstraRoute);
       if (!netResult.succeed) {
         yieldResultCallback({
           type: IntermediateRouteResultType.FailNet,

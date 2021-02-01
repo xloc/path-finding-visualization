@@ -1,6 +1,6 @@
 import Connection from "../Models/Connection";
 import { Grid, GridSize } from "../Models/Grid";
-import { Coors, RouteMap } from "../Models/RouteMap";
+import { Coors, Net, RouteMap } from "../Models/RouteMap";
 
 export function makeTargetGrid(size: GridSize, targets: Array<Coors>) {
   const grid = new Grid(size, (i, j) => {
@@ -25,9 +25,10 @@ export function adjacentCoors(i: number, j: number): Array<Coors> {
 
 export function makeObstacleGrid(
   routeMap: RouteMap,
-  routingNetID: number,
+  net: Net,
   routedConnections: Array<Connection>
 ) {
+  const routingNetID = net.netID;
   const grid = new Grid(routeMap.size, (i, j) => {
     return false;
   });

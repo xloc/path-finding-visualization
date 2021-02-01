@@ -59,9 +59,13 @@ export class NetRouteProgress {
 }
 
 export class ExpandProgress {
-  constructor(public grid: Grid<boolean>) {}
+  constructor(public visited: Grid<number>, public active: Grid<boolean>) {}
 }
 
-export interface BacktrackProgress {
-  grid: Grid<boolean>;
+export class BacktrackProgress {
+  constructor(
+    public visited: Grid<number>,
+    public segHistory: Array<Coors>,
+    public newSegment: Coors
+  ) {}
 }
