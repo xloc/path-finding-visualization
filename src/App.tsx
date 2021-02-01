@@ -18,7 +18,7 @@ import Slider from "@material-ui/core/Slider";
 /// User Component Imports
 import theme from "./theme";
 import "./App.css";
-import Grid from "./Components/Grid";
+import Grid, { ProgressCell } from "./Components/Grid";
 import {
   ConnectSucceed,
   ConnectFailAll,
@@ -79,17 +79,18 @@ const useStyles = makeStyles((theme: Theme) =>
     content: {
       flexGrow: 1,
       backgroundColor: theme.palette.background.default,
-      padding: theme.spacing(3),
     },
   })
 );
 
 const buildRouteProgress = (progress: CircuitRouteHistory) => {
-  const currentProgress: Array<[NetRouteHistory, ConnectionProgress]> = [];
+  const currentProgress: Array<
+    [NetRouteHistory, ConnectionRouteHistory, ConnectionProgress]
+  > = [];
   for (const netH of progress.netHistories) {
     for (const connH of netH.connectionHistories) {
       for (const p of connH.progress) {
-        currentProgress.push([netH, p]);
+        currentProgress.push([netH, connH, p]);
       }
     }
   }
@@ -99,6 +100,7 @@ const buildRouteProgress = (progress: CircuitRouteHistory) => {
 function App() {
   const [routeResult, setRouteResult] = useState<RouteResult>();
   const [routeMap, setRouteMap] = useState<RouteMap>();
+  const [progressGrid, setProgressGrid] = useState<GridModel<ProgressCell>>();
   const classes = useStyles();
 
   const { routeMapSelector, mapName } = useRouteMapSelector(setRouteMap);
@@ -126,6 +128,7 @@ function App() {
 
     setCurrentHistory(undefined);
     setRouteHistories([]);
+    setProgressGrid(undefined);
 
     const routeResult = routeCircuit(routeMap, innerResultCallback);
 
@@ -177,7 +180,7 @@ function App() {
   }, [currentHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [currentProgress, setCurrentProgress] = useState<
-    Array<[NetRouteHistory, ConnectionProgress]>
+    Array<[NetRouteHistory, ConnectionRouteHistory, ConnectionProgress]>
   >();
   useEffect(() => {
     if (!routeMap) return;
@@ -234,18 +237,53 @@ function App() {
   const [currentProgressIndex, setCurrentProgressIndex] = useState(0);
 
   useEffect(() => {
-    if (!routeMap || !currentProgress || !currentProgressIndex) return;
+    if (!routeMap || !currentProgress || currentProgressIndex === undefined)
+      return;
 
-    const [netHistory, progress] = currentProgress[currentProgressIndex];
+    console.log(currentProgress[currentProgressIndex]);
 
-    // setRouteResult();
+    const [netHistory, connHistory, progress] = currentProgress[
+      currentProgressIndex
+    ];
+
+    const segmentGrid = netHistory.segmentGrid.map((v) => ({ ...v }));
+    connHistory.sources.forEach(([i, j]) => {
+      segmentGrid.grid[i][j].netId = netHistory.net.netID;
+    });
+    if (progress.type === "backtrack") {
+      const { segHistory, newSegment } = progress.progress;
+      console.log({ segHistory, newSegment });
+
+      [...segHistory, newSegment].forEach(([i, j]) => {
+        segmentGrid.grid[i][j].netId = netHistory.net.netID;
+      });
+    }
+
+    setRouteResult(segmentGrid);
+
+    /// set progress grid
+    if (progress.type === "expand") {
+      setProgressGrid(
+        new GridModel<ProgressCell>(routeMap.size, (i, j) => {
+          return {
+            visited: progress.progress.visited.grid[i][j],
+            active: progress.progress.active.grid[i][j],
+          } as ProgressCell;
+        })
+      );
+    }
   }, [currentProgressIndex]);
+
+  useEffect(() => {
+    console.log(progressGrid);
+  }, [progressGrid]);
 
   const progressSlide = currentProgress ? (
     <Slider
       onChange={(e, val) => setCurrentProgressIndex(val as number)}
       min={0}
       max={currentProgress.length - 1}
+      marks
     />
   ) : (
     <Slider disabled />
@@ -312,11 +350,15 @@ function App() {
         <main className={classes.content}>
           <div className={classes.toolbar} />
           {routeMap ? (
-            <Grid circuit={routeMap} segments={routeResult} />
+            <Grid
+              circuit={routeMap}
+              segments={routeResult}
+              progress={progressGrid}
+            />
           ) : (
             <></>
           )}
-          <div>{progressSlide}</div>
+          <div style={{ padding: "0 20px" }}>{progressSlide}</div>
         </main>
         <Drawer
           open={true}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { RouteResult, RouteResultCell } from "../Models/RouteResult";
 import { RouteMap } from "../Models/RouteMap";
+import { Grid as GridModel } from "../Models/Grid";
 import "./Grid.css";
 import NetColors from "./NetColorTheme";
 
@@ -35,20 +36,23 @@ function makeRouteMapGrid(routeMap: RouteMap): Array<Array<RouteMapCellAttr>> {
   return grid;
 }
 
+export interface ProgressCell {
+  visited: number;
+  active: boolean;
+}
+
 type GridProps = {
   circuit: RouteMap;
   segments: RouteResult | undefined;
+  progress: GridModel<ProgressCell> | undefined;
 };
-export default function Grid({
-  circuit: routeMap,
-  segments: routeResult,
-}: GridProps) {
+export default function Grid({ circuit, segments, progress }: GridProps) {
   const [routeMapGrid, setRouteMapGrid] = useState(() =>
-    makeRouteMapGrid(routeMap)
+    makeRouteMapGrid(circuit)
   );
   useEffect(() => {
-    setRouteMapGrid(makeRouteMapGrid(routeMap));
-  }, [routeMap]);
+    setRouteMapGrid(makeRouteMapGrid(circuit));
+  }, [circuit]);
 
   return (
     <div>
@@ -60,7 +64,8 @@ export default function Grid({
                 <GridCell
                   key={`grid-cell ${i} ${j}`}
                   mapCell={cell}
-                  segment={routeResult?.grid[i][j]}
+                  segment={segments?.grid[i][j]}
+                  progress={progress?.grid[i][j]}
                 />
               );
             })}
@@ -74,8 +79,9 @@ export default function Grid({
 type GridCellProps = {
   mapCell: RouteMapCellAttr;
   segment: RouteResultCell | undefined;
+  progress: ProgressCell | undefined;
 };
-export function GridCell({ mapCell, segment }: GridCellProps) {
+export function GridCell({ mapCell, segment, progress }: GridCellProps) {
   let color = "#ccc";
   if (mapCell.isWall) {
     color = "black";
@@ -88,9 +94,19 @@ export function GridCell({ mapCell, segment }: GridCellProps) {
       color = NetColors[segment.netId];
     }
   }
+
+  const shadow =
+    segment?.netId === -1 &&
+    !mapCell.isPin &&
+    progress &&
+    progress.visited >= 0;
   return (
     <div className="grid-cell" style={{ backgroundColor: color }}>
-      <div className={mapCell.isPin ? "pin" : ""} />
+      <div className={mapCell.isPin ? "pin cell-overlap" : ""} />
+      {/* <div className="cell-overlap mark">
+        {progress && (progress.visited >= 0 ? "x" : "")}
+      </div> */}
+      <div className={shadow ? "visited cell-overlap" : ""}></div>
     </div>
   );
 }

@@ -5,6 +5,7 @@
 }
 
 .grid-cell {
+  position: relative;
   width: 20px;
   height: 20px;
   margin: 2px;
@@ -14,11 +15,28 @@
   color: #92da26;
 }
 
+.cell-overlap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .pin {
   width: 10px;
   height: 10px;
   background-color: #fffc;
-  margin: 5px;
+}
+
+.mark {
+  color: black;
+}
+
+.visited {
+  width: 20px;
+  height: 20px;
+
+  background-color: #0005;
 }
 
 /* .grid-cell {

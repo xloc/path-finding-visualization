@@ -29,7 +29,7 @@ export class Grid<T> {
     } as Grid<U>;
   }
 
-  copy() {
+  copyNumber() {
     return {
       size: { ...this.size },
       grid: this.grid.map((row) => {

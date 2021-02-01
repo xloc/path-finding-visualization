@@ -27,7 +27,7 @@ import { RouteResultCell } from "../Models/RouteResult";
 
 export const buildExpandProgress = (progressGrid: Grid<number>) => {
   return new ExpandProgress(
-    progressGrid.copy(),
+    progressGrid.copyNumber(),
     progressGrid.map((val) => {
       return val === -2;
     })
@@ -35,7 +35,10 @@ export const buildExpandProgress = (progressGrid: Grid<number>) => {
 };
 
 export class ConnectionRouteHistory {
-  constructor(public progress: Array<ConnectionProgress>) {}
+  constructor(
+    public progress: Array<ConnectionProgress>,
+    public sources: Coors[]
+  ) {}
 }
 
 export type ConnectionRouter = (
@@ -113,7 +116,7 @@ export function dijkstraRoute(
     if (historyRecord)
       historyRecord.progress.push({
         type: "backtrack",
-        progress: new BacktrackProgress(progressGrid, segments, [i, j]),
+        progress: new BacktrackProgress(progressGrid, [...segments], [i, j]),
       });
 
     if (progressGrid.grid[i][j] === 0) break;
@@ -131,7 +134,7 @@ export function dijkstraRoute(
 export class NetRouteHistory {
   constructor(
     public net: Net,
-    public wireGrid: Grid<RouteResultCell>,
+    public segmentGrid: Grid<RouteResultCell>,
     public connectionHistories: Array<ConnectionRouteHistory>
   ) {}
 }
@@ -149,7 +152,7 @@ export function routeNet(
 
   const getConnectionHistory = () => {
     if (historyRecord) {
-      const ch = new ConnectionRouteHistory([]);
+      const ch = new ConnectionRouteHistory([], [...sources]);
       historyRecord.connectionHistories.push(ch);
       return ch;
     } else {
@@ -205,6 +208,8 @@ export const routeCircuitUntilFail = (
     const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
     const netResult = routeNet(obstacleGrid, net, dijkstraRoute, netHistory);
     if (!netResult.succeed) break;
+    const succeed = netResult as NetRoutingSuccess;
+    routedConnections.push(succeed.connection);
   }
 };
 
