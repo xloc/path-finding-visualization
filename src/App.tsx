@@ -26,7 +26,7 @@ import {
 /// User Model Imports
 import { Grid as GridModel, GridSize } from "./Models/Grid";
 import { RouteMap } from "./Models/RouteMap";
-import { route } from "./Routers/Router";
+import { routeCircuit } from "./Routers/Router";
 import { RouteResult, RouteResultCell } from "./Models/RouteResult";
 import { useRouteMapSelector } from "./Components/useRouteMapSelector";
 import Connection from "./Models/Connection";
@@ -117,7 +117,7 @@ function App() {
 
     setCurrentHistory(undefined);
     setRouteHistory([]);
-    const routeResult = route(routeMap, innerResultCallback);
+    const routeResult = routeCircuit(routeMap, innerResultCallback);
 
     if (!routeResult.succeed) {
       setRouteResult(undefined);

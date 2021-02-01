@@ -122,7 +122,7 @@ export function routeNet(
   }
 }
 
-export function route(
+export function routeCircuit(
   routeMap: RouteMap,
   yieldResultCallback: (arg0: IntermediateRouteResult) => void
 ): MapRouteResult {
