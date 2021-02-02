@@ -349,15 +349,17 @@ function App() {
         </Drawer>
         <main className={classes.content}>
           <div className={classes.toolbar} />
-          {routeMap ? (
-            <Grid
-              circuit={routeMap}
-              segments={routeResult}
-              progress={progressGrid}
-            />
-          ) : (
-            <></>
-          )}
+          <div style={{ padding: 20 }}>
+            {routeMap ? (
+              <Grid
+                circuit={routeMap}
+                segments={routeResult}
+                progress={progressGrid}
+              />
+            ) : (
+              <></>
+            )}
+          </div>
           <div style={{ padding: "0 20px" }}>{progressSlide}</div>
         </main>
         <Drawer
