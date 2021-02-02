@@ -109,12 +109,19 @@ function App() {
     [] as Array<IntermediateRouteResult>
   );
 
+  let maxNetConnections = [0];
   const innerResultCallback = (result: IntermediateRouteResult) => {
     setRouteHistories((prev) => {
       if (prev.length > 200) return prev;
-      if (result.type === IntermediateRouteResultType.Succeed)
+      if (result.type === IntermediateRouteResultType.Succeed) {
+        let nConnection =
+          (result as IntermediateRouteSucceed).connectionHistory.length + 1;
+
+        if (nConnection > maxNetConnections[0]) {
+          maxNetConnections[0] = nConnection;
+        }
         return [...prev, result];
-      else return prev;
+      } else return prev;
     });
   };
 
@@ -130,7 +137,9 @@ function App() {
     setRouteHistories([]);
     setProgressGrid(undefined);
 
+    maxNetConnections[0] = 0;
     const routeResult = routeCircuit(routeMap, innerResultCallback);
+    console.log({ maxNetConnections });
 
     if (!routeResult.succeed) {
       setRouteResult(undefined);
@@ -252,7 +261,6 @@ function App() {
     });
     if (progress.type === "backtrack") {
       const { segHistory, newSegment } = progress.progress;
-      console.log({ segHistory, newSegment });
 
       [...segHistory, newSegment].forEach(([i, j]) => {
         segmentGrid.grid[i][j].netId = netHistory.net.netID;

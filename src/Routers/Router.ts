@@ -207,7 +207,7 @@ export const routeCircuitUntilFail = (
     historyRecord.netHistories.push(netHistory);
 
     const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
-    const netResult = routeNet(obstacleGrid, net, aStarRoute, netHistory);
+    const netResult = routeNet(obstacleGrid, net, dijkstraRoute, netHistory);
     if (!netResult.succeed) break;
     const succeed = netResult as NetRoutingSuccess;
     routedConnections.push(succeed.connection);
@@ -235,7 +235,7 @@ export function routeCircuit(
 
       /// try to route the net
       const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
-      const netResult = routeNet(obstacleGrid, net, aStarRoute);
+      const netResult = routeNet(obstacleGrid, net, dijkstraRoute);
       if (!netResult.succeed) {
         yieldResultCallback({
           type: IntermediateRouteResultType.FailNet,

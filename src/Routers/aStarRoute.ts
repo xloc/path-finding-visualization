@@ -147,7 +147,7 @@ export default function aStarRoute(
     try {
       [i, j] = expandFromGrid.grid[i][j] as Coors;
     } catch (error) {
-      console.log({ i, j, grid: expandFromGrid.grid[i][j] });
+      // console.log({ i, j, grid: expandFromGrid.grid[i][j] });
       break;
     }
 
