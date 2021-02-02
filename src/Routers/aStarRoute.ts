@@ -18,7 +18,7 @@ const coorsDist = (a: Coors, b: Coors) => {
 
 class QueueItem {
   dist: number;
-  constructor(public coors: Coors, targets: Coors[]) {
+  constructor(public coors: Coors, targets: Coors[], iExpand: number) {
     let [closest, ...others] = targets;
     let minDist = coorsDist(closest, coors);
     for (const c of others) {
@@ -28,7 +28,7 @@ class QueueItem {
         closest = c;
       }
     }
-    this.dist = minDist;
+    this.dist = minDist + iExpand;
   }
 }
 
@@ -54,7 +54,7 @@ const compareItem = (a: QueueItem, b: QueueItem) => {
 const buildQueue = (sources: Coors[], targets: Coors[]) => {
   let queue = new PriorityQueue<QueueItem>({ comparator: compareItem });
   for (const s of sources) {
-    queue.queue(new QueueItem(s, targets));
+    queue.queue(new QueueItem(s, targets, 0));
   }
   return queue;
 };
@@ -101,7 +101,7 @@ export default function aStarRoute(
   /// expansion
   let isStart = true;
   const queue = buildQueue(sources, targets);
-
+  let iExpand = 1;
   // let iExpand = 0;
   let connectedTargetCoors: Coors | null = null;
   while (queue.length > 0) {
@@ -114,7 +114,7 @@ export default function aStarRoute(
     for (const [i, j] of expansionList) {
       for (const [ni, nj] of adjacentCoors(i, j)) {
         if (canExpand(ni, nj)) {
-          queue.queue(new QueueItem([ni, nj], targets));
+          queue.queue(new QueueItem([ni, nj], targets, iExpand));
           expandFromGrid.grid[ni][nj] = [i, j];
 
           progressGrid.grid[ni][nj] = -2;
@@ -128,6 +128,8 @@ export default function aStarRoute(
     /// whether found target
     if (connectedTargetCoors) {
       queue.clear();
+    } else {
+      iExpand++;
     }
 
     if (historyRecord)
@@ -142,7 +144,12 @@ export default function aStarRoute(
   let [i, j]: Coors = connectedTargetCoors;
   const segments: Array<Coors> = [];
   while (true) {
-    [i, j] = expandFromGrid.grid[i][j] as Coors;
+    try {
+      [i, j] = expandFromGrid.grid[i][j] as Coors;
+    } catch (error) {
+      console.log({ i, j, grid: expandFromGrid.grid[i][j] });
+      break;
+    }
 
     if (historyRecord)
       historyRecord.progress.push({

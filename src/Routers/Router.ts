@@ -24,6 +24,7 @@ import {
   ConnectionProgress,
 } from "./RouteResults";
 import { RouteResultCell } from "../Models/RouteResult";
+import aStarRoute from "./aStarRoute";
 
 export const buildExpandProgress = (progressGrid: Grid<number>) => {
   return new ExpandProgress(
@@ -206,7 +207,7 @@ export const routeCircuitUntilFail = (
     historyRecord.netHistories.push(netHistory);
 
     const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
-    const netResult = routeNet(obstacleGrid, net, dijkstraRoute, netHistory);
+    const netResult = routeNet(obstacleGrid, net, aStarRoute, netHistory);
     if (!netResult.succeed) break;
     const succeed = netResult as NetRoutingSuccess;
     routedConnections.push(succeed.connection);
@@ -234,7 +235,7 @@ export function routeCircuit(
 
       /// try to route the net
       const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
-      const netResult = routeNet(obstacleGrid, net, dijkstraRoute);
+      const netResult = routeNet(obstacleGrid, net, aStarRoute);
       if (!netResult.succeed) {
         yieldResultCallback({
           type: IntermediateRouteResultType.FailNet,
