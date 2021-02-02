@@ -12,7 +12,7 @@ export function useRouteMapSelector(setRouteMap: (arg0: RouteMap) => void) {
     return () => {};
   }, []);
 
-  const [mapName, setMapName] = useState("impossible.infile");
+  const [mapName, setMapName] = useState("rusty.infile");
   useEffect(() => {
     if (mapName === "") return;
     axios.get<string>(`benchmarks/${mapName}`).then((res) => {

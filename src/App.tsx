@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import {
   AppBar,
-  Container,
   createStyles,
   CssBaseline,
   Drawer,
+  FormControlLabel,
   List,
   ListItem,
   makeStyles,
+  Radio,
+  RadioGroup,
   Theme,
   ThemeProvider,
   Toolbar,
@@ -26,18 +28,18 @@ import {
 } from "./Components/RouteProgressEntry";
 
 /// User Model Imports
-import { Grid as GridModel, GridSize } from "./Models/Grid";
+import { Grid as GridModel } from "./Models/Grid";
 import { RouteMap } from "./Models/RouteMap";
 import {
   CircuitRouteHistory,
   ConnectionRouteHistory,
+  dijkstraRoute,
   NetRouteHistory,
   routeCircuit,
   routeCircuitUntilFail,
 } from "./Routers/Router";
-import { RouteResult, RouteResultCell } from "./Models/RouteResult";
+import { RouteResult } from "./Models/RouteResult";
 import { useRouteMapSelector } from "./Components/useRouteMapSelector";
-import Connection from "./Models/Connection";
 import {
   ConnectionProgress,
   IntermediateRouteFailAll,
@@ -48,6 +50,7 @@ import {
   MapRouteSuccess,
 } from "./Routers/RouteResults";
 import { makeRouteResultGridFromConnections } from "./Routers/utils";
+import aStarRoute from "./Routers/aStarRoute";
 
 const circuitDrawerWidth = 150;
 const historyDrawerWidth = 200;
@@ -101,6 +104,7 @@ function App() {
   const [routeResult, setRouteResult] = useState<RouteResult>();
   const [routeMap, setRouteMap] = useState<RouteMap>();
   const [progressGrid, setProgressGrid] = useState<GridModel<ProgressCell>>();
+  const [routerName, setRouterName] = useState("dijkstra");
   const classes = useStyles();
 
   const { routeMapSelector, mapName } = useRouteMapSelector(setRouteMap);
@@ -112,7 +116,7 @@ function App() {
   let maxNetConnections = [0];
   const innerResultCallback = (result: IntermediateRouteResult) => {
     setRouteHistories((prev) => {
-      if (prev.length > 200) return prev;
+      if (prev.length > 100) return prev;
       if (result.type === IntermediateRouteResultType.Succeed) {
         let nConnection =
           (result as IntermediateRouteSucceed).connectionHistory.length + 1;
@@ -120,8 +124,8 @@ function App() {
         if (nConnection > maxNetConnections[0]) {
           maxNetConnections[0] = nConnection;
         }
-        return [...prev, result];
-      } else return prev;
+      }
+      return [...prev, result];
     });
   };
 
@@ -138,7 +142,11 @@ function App() {
     setProgressGrid(undefined);
 
     maxNetConnections[0] = 0;
-    const routeResult = routeCircuit(routeMap, innerResultCallback);
+    const routeResult = routeCircuit(
+      routeMap,
+      innerResultCallback,
+      routerName !== "dijkstra" ? aStarRoute : dijkstraRoute
+    );
     console.log({ maxNetConnections });
 
     if (!routeResult.succeed) {
@@ -146,14 +154,14 @@ function App() {
       return;
     }
     const succeed = routeResult as MapRouteSuccess;
-    console.log(succeed);
+    // console.log(succeed);
 
     const grid = makeRouteResultGridFromConnections(
       routeMap.size,
       succeed.connections
     );
     setRouteResult(grid);
-  }, [routeMap]);
+  }, [routeMap, routerName]);
 
   useEffect(() => {
     if (!routeMap) return;
@@ -206,7 +214,8 @@ function App() {
             [...succeed.connectionHistory, succeed.newConnection]
               .map((conn) => conn.netID)
               .map((id) => routeMap.nets[id]),
-            progress
+            progress,
+            routerName !== "dijkstra" ? aStarRoute : dijkstraRoute
           );
 
           setCurrentProgress(buildRouteProgress(progress));
@@ -225,7 +234,8 @@ function App() {
                 .map((id) => routeMap.nets[id]),
               failNet.failedNet,
             ],
-            progress
+            progress,
+            routerName !== "dijkstra" ? aStarRoute : dijkstraRoute
           );
 
           setCurrentProgress(buildRouteProgress(progress));
@@ -236,7 +246,7 @@ function App() {
       default:
         console.error("should not reach here");
     }
-  }, [currentHistory]);
+  }, [currentHistory, routerName]);
 
   useEffect(() => {
     if (!currentProgress) return;
@@ -249,7 +259,7 @@ function App() {
     if (!routeMap || !currentProgress || currentProgressIndex === undefined)
       return;
 
-    console.log(currentProgress[currentProgressIndex]);
+    // console.log(currentProgress[currentProgressIndex]);
 
     const [netHistory, connHistory, progress] = currentProgress[
       currentProgressIndex
@@ -283,7 +293,7 @@ function App() {
   }, [currentProgressIndex]);
 
   useEffect(() => {
-    console.log(progressGrid);
+    // console.log(progressGrid);
   }, [progressGrid]);
 
   const progressSlide = currentProgress ? (
@@ -341,10 +351,24 @@ function App() {
       <ThemeProvider theme={theme}>
         <AppBar position="fixed" className={classes.appBar}>
           <Toolbar>
-            {" "}
             <Typography variant="h6" noWrap>
               {mapName}
             </Typography>
+            <div style={{ flexGrow: 1 }}></div>
+            <RadioGroup
+              row
+              aria-label="gender"
+              name="gender1"
+              value={routerName}
+              onChange={(event) => setRouterName(event.target.value)}
+            >
+              <FormControlLabel
+                value="dijkstra"
+                control={<Radio />}
+                label="Lee-Moore"
+              />
+              <FormControlLabel value="aStar" control={<Radio />} label="A*" />
+            </RadioGroup>
           </Toolbar>
         </AppBar>
         <Drawer

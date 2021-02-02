@@ -195,7 +195,8 @@ export class CircuitRouteHistory {
 export const routeCircuitUntilFail = (
   routeMap: RouteMap,
   netSequence: Array<Net>,
-  historyRecord: CircuitRouteHistory
+  historyRecord: CircuitRouteHistory,
+  connectionRouter: ConnectionRouter
 ) => {
   const routedConnections: Array<Connection> = [];
   for (const net of netSequence) {
@@ -207,7 +208,7 @@ export const routeCircuitUntilFail = (
     historyRecord.netHistories.push(netHistory);
 
     const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
-    const netResult = routeNet(obstacleGrid, net, dijkstraRoute, netHistory);
+    const netResult = routeNet(obstacleGrid, net, connectionRouter, netHistory);
     if (!netResult.succeed) break;
     const succeed = netResult as NetRoutingSuccess;
     routedConnections.push(succeed.connection);
@@ -216,7 +217,8 @@ export const routeCircuitUntilFail = (
 
 export function routeCircuit(
   routeMap: RouteMap,
-  yieldResultCallback: (arg0: IntermediateRouteResult) => void
+  yieldResultCallback: (arg0: IntermediateRouteResult) => void,
+  connectionRouter: ConnectionRouter
 ): MapRouteResult {
   function tryToRoute(
     nets: Array<Net>,
@@ -235,7 +237,7 @@ export function routeCircuit(
 
       /// try to route the net
       const obstacleGrid = makeObstacleGrid(routeMap, net, routedConnections);
-      const netResult = routeNet(obstacleGrid, net, dijkstraRoute);
+      const netResult = routeNet(obstacleGrid, net, connectionRouter);
       if (!netResult.succeed) {
         yieldResultCallback({
           type: IntermediateRouteResultType.FailNet,
