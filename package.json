@@ -50,6 +50,7 @@
   },
   "homepage": "https://xloc.github.io/path-finding-visualization",
   "devDependencies": {
+    "@types/js-priority-queue": "0.0.5",
     "@types/uuid": "^8.3.0"
   }
 }
